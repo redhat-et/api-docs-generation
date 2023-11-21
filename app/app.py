@@ -1,4 +1,4 @@
-from utils import check_prompt_token_limit
+from utils import check_prompt_token_limit, generate_text
 import os
 import streamlit as st
 import logging
