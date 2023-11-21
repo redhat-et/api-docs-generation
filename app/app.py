@@ -115,7 +115,7 @@ Generate documentation for each function in the given code snippet:
 {code}
 
 
-""".format(code=code)
+""".format(code=code[f"{file}.py"])
 
 with st.expander("Expand to view prompt"):
     st.text_area(label="prompt", value=prompt, height=600)

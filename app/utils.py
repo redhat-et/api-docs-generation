@@ -126,6 +126,9 @@ def generate_text(
     model = Model(model_id, credentials=creds, params=params)
 
     response = model.generate([prompt])
+
+    print(response)
+    
     generated_patch = response[0].generated_text
 
     return generated_patch
