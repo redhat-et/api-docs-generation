@@ -1,2 +1,5 @@
 html2text
 ibm-generative-ai
+python-dotenv
+streamlit-toggle-switch
+streamlit

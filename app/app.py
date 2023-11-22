@@ -44,7 +44,7 @@ file = st.selectbox(
 logging.debug("user selected datapoint")
 
 # load nested data
-dataset_path = "data/raw/nested_data.json"
+dataset_path = "../data/raw/nested_data.json"
 with open(dataset_path, 'r') as f:
 		data = json.load(f)
     
