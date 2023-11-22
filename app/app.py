@@ -85,33 +85,35 @@ with st.sidebar:
 
     instruction = st.text_area(
         "Instruction",
-        """
-        Create documentation for the function below
+"""
+Create documentation for the code fragments below
 
-        For Example:
+For Example:
 
-        Function:
-        def in_validity_period(self) -> bool:
-                ###
-                Returns whether or not this `Identity` is currently within its self-stated validity period.
+Function:
 
-                NOTE: As noted in `Identity.__init__`, this is not a verifying wrapper;
-                the check here only asserts whether the *unverified* identity's claims
-                are within their validity period.
-                ###
+def in_validity_period(self) -> bool:
+        ###
+        Returns whether or not this `Identity` is currently within its self-stated validity period.
 
-                now = datetime.now(timezone.utc).timestamp()
+        NOTE: As noted in `Identity.__init__`, this is not a verifying wrapper;
+        the check here only asserts whether the *unverified* identity's claims
+        are within their validity period.
+        ###
 
-                if self._nbf is not None:
-                    return self._nbf <= now < self._exp
-                else:
-                    return now < self._exp
+        now = datetime.now(timezone.utc).timestamp()
 
-        Documentation:
-        Returns whether or not this Identity is currently within its self-stated validity period.
-        NOTE: As noted in Identity.__init__, this is not a verifying wrapper; the check here only asserts whether the         unverified identity's claims are within their validity period.",
-            )
-        """
+        if self._nbf is not None:
+            return self._nbf <= now < self._exp
+        else:
+            return now < self._exp
+
+Documentation:
+
+Returns whether or not this Identity is currently within its self-stated validity period.
+NOTE: As noted in Identity.__init__, this is not a verifying wrapper; the check here only asserts whether the         unverified identity's claims are within their validity period.",
+    )
+"""
     )
 
     st.write("Prompt Elements")
@@ -123,7 +125,7 @@ with st.sidebar:
 
 
 functions_text = code["functions"]
-# classes_text = code["classes"]
+classes_text = code["classes"]
 documentation_text = code["documentation"]
 imports_text = code["imports"]
 other_text = code["other"]
@@ -132,8 +134,8 @@ prompt = generate_prompt(
     instruction,
     functions=functions,
     functions_text=functions_text,
-    # classes=classes,
-    # classes_text=classes_text,
+    classes=classes,
+    classes_text=classes_text,
     documentation=documentation,
     documentation_text=documentation_text,
     imports=imports,

@@ -17,8 +17,8 @@ def generate_prompt(
     instruction: str,
     functions: bool = False,
     functions_text: str = "",
-    # classes: bool = False,
-    # classes_text: str = "",
+    classes: bool = False,
+    classes_text: str = "",
     documentation: bool = False,
     documentation_text: str = "",
     imports: bool = False,
@@ -28,7 +28,7 @@ def generate_prompt(
 ) -> str:
 
     functions_text_joined = '\n'.join(functions_text)
-    # classes_text_joined = '\n'.join(classes_text)
+    classes_text_joined = '\n'.join(classes_text)
     documentation_text_joined = '\n'.join(documentation_text)
     imports_text_joined = '\n'.join(imports_text)
     other_text_joined = '\n'.join(other_text)
@@ -40,40 +40,46 @@ def generate_prompt(
     if functions and functions_text_joined:
         prompt += f"""
 
-        Function:
+Function:
 
-        {functions_text_joined}
+{functions_text_joined}
 
-        Documentation:
+Documentation:
 
-        """
+"""
 
-#     if classes and classes_text_joined:
-#         prompt += f"""Create documentation for the classes below:
-# ```
-# {classes_text_joined}
-# ```
-# """
+    if classes and classes_text_joined:
+        prompt += f"""
+        
+Class:
+
+{classes_text_joined}
+
+Documentation
+"""
 
     if documentation and documentation_text_joined:
-        prompt += f"""Here is some code documentation for reference:
-```
+        prompt += f"""
+Here is some code documentation for reference:
+
 {documentation_text_joined}
-```
+
 """
 
     if imports and imports_text_joined:
-        prompt += f"""Here are the import statements for reference:
-```
+        prompt += f"""
+Here are the import statements for reference:
+
 {imports_text_joined}
-```
+
 """
 
     if other and other_text:
-        prompt += f"""Here are other lines of code for reference:
-```
+        prompt += f"""
+Here are other lines of code for reference:
+
 {other_text_joined}
-```
+
 """
 
     return prompt
@@ -140,7 +146,7 @@ def generate_text(
     response = model.generate([prompt])
 
     print(response)
-    
+
     generated_patch = response[0].generated_text
 
     return generated_patch
