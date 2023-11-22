@@ -50,15 +50,15 @@ logging.debug("loaded data")
 
 code = data[file]["code_chunks"]
 
-actual_doc = data[file]["markdown"][0]
+actual_doc = data[file]["markdown"]
 
 with st.sidebar:
     st.header("Model Parameters")
     model_id = st.selectbox(
         label="Model",
         options=[
-            "codellama/codellama-34b-instruct",
             "ibm/granite-20b-code-instruct-v1",
+            "codellama/codellama-34b-instruct",
             "meta-llama/llama-2-13b",
             "ibm/granite-3b-code-plus-v1",
             "meta-llama/llama-2-70b"
@@ -66,11 +66,11 @@ with st.sidebar:
     )
 
     decoding_method = st.selectbox(
-        label="Decoding Strategy", options=["greedy", "sample"]
+        label="Decoding Strategy", options=["sample", "greedy"]
     )
 
     max_new_tokens = st.slider(
-        label="Max New Tokens", min_value=0, max_value=1024, value=1024, step=1
+        label="Max New Tokens", min_value=0, max_value=1024, value=300, step=1
     )
 
     temperature = st.slider(
@@ -142,13 +142,13 @@ prompt = generate_prompt(
     other_text=other_text
 )
 
-print(functions)
-print(prompt)
+# print(functions)
+# print(prompt)
 
 with st.expander("Expand to view prompt"):
     st.text_area(label="prompt", value=prompt, height=600)
 
-def main(prompt_success, prompt_diff):
+def main(prompt_success, prompt_diff, actual_doc):
     if not prompt_success:
         st.write(f"Prompt is {prompt_diff} tokens too long, please shorten it")
         return
@@ -161,9 +161,11 @@ def main(prompt_success, prompt_diff):
     )
 
     st.text(result)
+    with st.expander("Actual Documentation"):
+        st.text_area(label="actual_doc", value=actual_doc, height=300)
 
 
 if st.button("Generate API Documentation"):
     prompt_success, prompt_diff = check_prompt_token_limit(model_id, prompt)
 
-    main(prompt_success, prompt_diff)
+    main(prompt_success, prompt_diff, actual_doc)
