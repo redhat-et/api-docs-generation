@@ -1,4 +1,4 @@
-from utils import check_prompt_token_limit, generate_text
+from utils import check_prompt_token_limit, generate_text, generate_prompt
 import os
 import streamlit as st
 import logging
@@ -21,11 +21,9 @@ st.set_page_config(
     page_icon="📄",
 )
 
-st.title("API Docs Generator", anchor="center")
+st.title("API Docs Generator 📄", anchor="center")
 
 logging.debug("loading data")
-# backports = load_data_with_defaults()
-logging.debug("loaded data")
 
 
 file = st.selectbox(
@@ -44,11 +42,14 @@ file = st.selectbox(
 logging.debug("user selected datapoint")
 
 # load nested data
-dataset_path = "../data/raw/nested_data.json"
+dataset_path = "../data/raw/chunked_data.json"
 with open(dataset_path, 'r') as f:
 		data = json.load(f)
-    
-code = data[file]["code"][0]
+
+logging.debug("loaded data")
+
+code = data[file]["code_chunks"]
+
 actual_doc = data[file]["markdown"][0]
 
 with st.sidebar:
@@ -59,6 +60,8 @@ with st.sidebar:
             "codellama/codellama-34b-instruct",
             "ibm/granite-20b-code-instruct-v1",
             "meta-llama/llama-2-13b",
+            "ibm/granite-3b-code-plus-v1",
+            "meta-llama/llama-2-70b"
         ],
     )
 
@@ -82,40 +85,65 @@ with st.sidebar:
 
     instruction = st.text_area(
         "Instruction",
-        "Create API docs for the given code",
+        """
+        Create documentation for the function below
+
+        For Example:
+
+        Function:
+        def in_validity_period(self) -> bool:
+                ###
+                Returns whether or not this `Identity` is currently within its self-stated validity period.
+
+                NOTE: As noted in `Identity.__init__`, this is not a verifying wrapper;
+                the check here only asserts whether the *unverified* identity's claims
+                are within their validity period.
+                ###
+
+                now = datetime.now(timezone.utc).timestamp()
+
+                if self._nbf is not None:
+                    return self._nbf <= now < self._exp
+                else:
+                    return now < self._exp
+
+        Documentation:
+        Returns whether or not this Identity is currently within its self-stated validity period.
+        NOTE: As noted in Identity.__init__, this is not a verifying wrapper; the check here only asserts whether the         unverified identity's claims are within their validity period.",
+            )
+        """
     )
 
     st.write("Prompt Elements")
     functions = st.toggle("Functions", value=False)
     classes = st.toggle("Classes", value=False)
     documentation = st.toggle("Documentation", value=False)
-    imports = st.toggle("Imports", value=True)
-    other = st.toggle("Other", value=True)
+    imports = st.toggle("Imports", value=False)
+    other = st.toggle("Other", value=False)
 
 
-# functions = code["functions"]
-# classes = code["classes"]
-# documentation = code["documentation"]
-# imports = code["imports"]
-# other = code["other"]
+functions_text = code["functions"]
+# classes_text = code["classes"]
+documentation_text = code["documentation"]
+imports_text = code["imports"]
+other_text = code["other"]
 
-# prompt = generate_prompt(
-#     instruction,
-#     functions=functions,
-#     classes=classes,
-#     documentation=documentation,
-#     imports=imports,
-#     other=other,
-# )
+prompt = generate_prompt(
+    instruction,
+    functions=functions,
+    functions_text=functions_text,
+    # classes=classes,
+    # classes_text=classes_text,
+    documentation=documentation,
+    documentation_text=documentation_text,
+    imports=imports,
+    imports_text=imports_text,
+    other=other,
+    other_text=other_text
+)
 
-
-prompt = """
-Generate documentation for each function in the given code snippet:
-
-{code}
-
-
-""".format(code=code[f"{file}.py"])
+print(functions)
+print(prompt)
 
 with st.expander("Expand to view prompt"):
     st.text_area(label="prompt", value=prompt, height=600)

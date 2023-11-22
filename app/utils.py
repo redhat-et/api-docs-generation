@@ -17,8 +17,8 @@ def generate_prompt(
     instruction: str,
     functions: bool = False,
     functions_text: str = "",
-    classes: bool = False,
-    classes_text: str = "",
+    # classes: bool = False,
+    # classes_text: str = "",
     documentation: bool = False,
     documentation_text: str = "",
     imports: bool = False,
@@ -27,40 +27,52 @@ def generate_prompt(
     other_text: str = "",
 ) -> str:
 
+    functions_text_joined = '\n'.join(functions_text)
+    # classes_text_joined = '\n'.join(classes_text)
+    documentation_text_joined = '\n'.join(documentation_text)
+    imports_text_joined = '\n'.join(imports_text)
+    other_text_joined = '\n'.join(other_text)
+
+    # print(functions_text_joined)
+
     prompt = f"""{instruction}\n"""
 
-    if functions:
-        prompt += f"""functions:
+    if functions and functions_text_joined:
+        prompt += f"""
+
+        Function:
+
+        {functions_text_joined}
+
+        Documentation:
+
+        """
+
+#     if classes and classes_text_joined:
+#         prompt += f"""Create documentation for the classes below:
+# ```
+# {classes_text_joined}
+# ```
+# """
+
+    if documentation and documentation_text_joined:
+        prompt += f"""Here is some code documentation for reference:
 ```
-{functions_text}
+{documentation_text_joined}
 ```
 """
 
-    if classes:
-        prompt += f"""classes:
+    if imports and imports_text_joined:
+        prompt += f"""Here are the import statements for reference:
 ```
-{classes_text}
-```
-"""
-
-    if documentation:
-        prompt += f"""documentation:
-```
-{documentation_text}
+{imports_text_joined}
 ```
 """
 
-    if imports:
-        prompt += f"""imports:
+    if other and other_text:
+        prompt += f"""Here are other lines of code for reference:
 ```
-{imports_text}
-```
-"""
-
-    if other:
-        prompt += f"""other:
-```
-{other_text}
+{other_text_joined}
 ```
 """
 
