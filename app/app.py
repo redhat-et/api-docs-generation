@@ -1,4 +1,4 @@
-from utils import check_prompt_token_limit, generate_text, generate_prompt
+from utils import check_prompt_token_limit, generate_text, generate_prompt, generate_text_using_OpenAI
 import os
 import streamlit as st
 import logging
@@ -61,7 +61,8 @@ with st.sidebar:
             "codellama/codellama-34b-instruct",
             "meta-llama/llama-2-13b",
             "ibm/granite-3b-code-plus-v1",
-            "meta-llama/llama-2-70b"
+            "meta-llama/llama-2-70b",
+            "OpenAI/gpt3.5",
         ],
     )
 
@@ -158,16 +159,27 @@ def main(prompt_success, prompt_diff, actual_doc):
     # Generate text
     logging.info("requesting generation from model %s", model_id)
 
-    result = generate_text(
+    if model_id =="OpenAI/gpt3.5":
+        result = generate_text_using_OpenAI(
+        model_id, prompt)
+        
+    else:
+        result = generate_text(
         model_id, prompt, decoding_method, max_new_tokens, temperature, top_k, top_p
-    )
+        )
 
-    st.text(result)
+    st.markdown(result)
     with st.expander("Actual Documentation"):
         st.text_area(label="actual_doc", value=actual_doc, height=300)
 
 
 if st.button("Generate API Documentation"):
-    prompt_success, prompt_diff = check_prompt_token_limit(model_id, prompt)
+    
+    if model_id != "OpenAI/gpt3.5":
+        prompt_success, prompt_diff = check_prompt_token_limit(model_id, prompt)
 
-    main(prompt_success, prompt_diff, actual_doc)
+        main(prompt_success, prompt_diff, actual_doc)
+    else:
+        
+        main(True, True, actual_doc)
+        

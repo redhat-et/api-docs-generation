@@ -5,11 +5,13 @@ from genai.schemas import GenerateParams
 import json
 import os
 import re
+from openai import OpenAI
 
 import logging
 
 load_dotenv()
 
+OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
 GENAI_KEY = os.environ["GENAI_KEY"]
 GENAI_API = os.environ["GENAI_API"]
 
@@ -150,3 +152,19 @@ def generate_text(
     generated_patch = response[0].generated_text
 
     return generated_patch
+
+def generate_text_using_OpenAI(model_id: str, prompt: str):
+    
+    creds = (OPENAI_API_KEY)
+    client = OpenAI()
+    completion = client.chat.completions.create(
+      model="gpt-3.5-turbo",
+      messages=[
+        {"role": "system", "content": f"{prompt}"},
+      ]
+    )
+    
+    response = completion.choices[0].message.content
+    print(response)
+    return response
+
