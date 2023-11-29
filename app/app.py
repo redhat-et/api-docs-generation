@@ -3,6 +3,10 @@ import os
 import streamlit as st
 import logging
 import json
+from rouge_score import rouge_scorer
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+
 
 GENAI_KEY = os.environ["GENAI_KEY"]
 GENAI_API = os.environ["GENAI_API"]
@@ -145,9 +149,6 @@ prompt = generate_prompt(
     other_text=other_text
 )
 
-# print(functions)
-# print(prompt)
-
 with st.expander("Expand to view prompt"):
     st.text_area(label="prompt", value=prompt, height=600)
 
@@ -167,10 +168,35 @@ def main(prompt_success, prompt_diff, actual_doc):
         result = generate_text(
         model_id, prompt, decoding_method, max_new_tokens, temperature, top_k, top_p
         )
+    col1, col2, col3 = st.columns([1.5, 1.5, 0.5])
+    
+    with col1:
+        st.subheader(f"Generated API Doc")
+        for line in result.split("\n"):
+            st.markdown(
+            f'<div style="color: black; font-size: small">{line}</div>', unsafe_allow_html=True)
 
-    st.markdown(result)
-    with st.expander("Actual Documentation"):
-        st.text_area(label="actual_doc", value=actual_doc, height=300)
+    with col2:
+        st.subheader("Actual API Doc")
+        for line in actual_doc.split("\n"):
+            st.markdown(
+            f'<div style="color: black; font-size: small">{line}</div>', unsafe_allow_html=True)
+
+    with col3:
+        st.subheader("Evaluation Metrics")
+        # rouge score addition
+        scorer = rouge_scorer.RougeScorer(['rouge1', 'rouge2', 'rougeL'], use_stemmer=True)
+        rouge_scores = scorer.score(actual_doc, result)
+        st.write(f"ROUGE-1 Score:{rouge_scores['rouge1'].fmeasure:.2f}")
+        st.write(f"ROUGE-2 Score: {rouge_scores['rouge2'].fmeasure:.2f}")
+        st.write(f"ROUGE-L Score: {rouge_scores['rougeL'].fmeasure:.2f}")
+
+        # calc cosine similarity
+        vectorizer = TfidfVectorizer()
+        tfidf_matrix = vectorizer.fit_transform([actual_doc, result])
+        cosine_sim = cosine_similarity(tfidf_matrix[0], tfidf_matrix[1])
+        st.write(f"Cosine Similarity Score: {cosine_sim[0][0]:.2f}")
+        st.write("###") # add a line break
 
 
 if st.button("Generate API Documentation"):
