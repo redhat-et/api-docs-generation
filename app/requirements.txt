@@ -3,3 +3,4 @@ ibm-generative-ai
 python-dotenv
 streamlit-toggle-switch
 streamlit
+rouge-score
