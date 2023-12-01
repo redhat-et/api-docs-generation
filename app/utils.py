@@ -27,6 +27,14 @@ def generate_prompt(
     imports_text: str = "",
     other: bool = False,
     other_text: str = "",
+    functions_code: bool = False,
+    functions_code_text: str = "",
+    functions_doc: bool = False,
+    functions_doc_text: str = "",
+    classes_code: bool = False,
+    classes_code_text: str = "",
+    classes_doc: bool = False,
+    classes_doc_text: str = "",
 ) -> str:
 
     functions_text_joined = '\n'.join(functions_text)
@@ -34,7 +42,10 @@ def generate_prompt(
     documentation_text_joined = '\n'.join(documentation_text)
     imports_text_joined = '\n'.join(imports_text)
     other_text_joined = '\n'.join(other_text)
-
+    functions_code_text_joined = '\n'.join(functions_code_text)
+    functions_doc_text_joined = '\n'.join(functions_doc_text)
+    classes_code_text_joined = '\n'.join(classes_code_text)
+    classes_doc_text_joined= '\n'.join( classes_doc_text)
     # print(functions_text_joined)
 
     prompt = f"""{instruction}\n"""
@@ -46,6 +57,26 @@ Function:
 
 {functions_text_joined}
 
+"""
+
+    if functions_code and functions_code_text_joined:
+        prompt += f"""
+
+
+Function Code:
+
+{functions_code_text_joined}
+
+"""
+
+    if functions_doc and functions_doc_text_joined:
+        prompt += f"""
+
+
+Function Docstrings:
+
+{functions_doc_text_joined}
+
 Documentation:
 
 """
@@ -56,6 +87,22 @@ Documentation:
 Class:
 
 {classes_text_joined}
+
+"""
+    if classes_code and classes_code_text_joined:
+        prompt += f"""
+        
+Class code:
+
+{classes_code_text_joined}
+
+""" 
+    if classes_doc and classes_doc_text_joined:
+        prompt += f"""
+
+Classes Docstrings:
+
+{classes_doc_text_joined}
 
 Documentation
 """

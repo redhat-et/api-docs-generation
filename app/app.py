@@ -127,17 +127,22 @@ NOTE: As noted in Identity.__init__, this is not a verifying wrapper; the check 
     documentation = st.toggle("Documentation", value=False)
     imports = st.toggle("Imports", value=False)
     other = st.toggle("Other", value=False)
+    functions_code = st.toggle("Functions Code only", value=False)
+    functions_doc = st.toggle("Functions Documentation only", value=False)
+    classes_code = st.toggle("Classes Code only", value=False)
+    classes_doc = st.toggle("Classes Documentation only", value=False)
 
+print(code.keys())
 
 functions_text = code["functions"]
 classes_text = code["classes"]
 documentation_text = code["documentation"]
 imports_text = code["imports"]
 other_text = code["other"]
-functions_code = code["functions_code"]
-functions_doc = code["functions_docstrings"]
-classes_code = code["classes_code"]
-classes_doc = code["classes_docstrings"]
+functions_code_text = code["functions_code"]
+functions_doc_text = code["functions_docstrings"]
+classes_code_text = code["classes_code"]
+classes_doc_text = code["classes_docstrings"]
 
 prompt = generate_prompt(
     instruction,
@@ -152,9 +157,13 @@ prompt = generate_prompt(
     other=other,
     other_text=other_text,
     functions_code=functions_code,
+    functions_code_text=functions_code_text,
     functions_doc=functions_doc,
+    functions_doc_text=functions_doc_text,
     classes_code=classes_code,
-    classes_doc=classes_doc
+    classes_code_text=classes_code_text,
+    classes_doc=classes_doc,
+    classes_doc_text=classes_doc_text,
 )
 
 with st.expander("Expand to view prompt"):
