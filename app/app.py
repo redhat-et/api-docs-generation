@@ -134,6 +134,10 @@ classes_text = code["classes"]
 documentation_text = code["documentation"]
 imports_text = code["imports"]
 other_text = code["other"]
+functions_code = code["functions_code"]
+functions_doc = code["functions_docstrings"]
+classes_code = code["classes_code"]
+classes_doc = code["classes_docstrings"]
 
 prompt = generate_prompt(
     instruction,
@@ -146,7 +150,11 @@ prompt = generate_prompt(
     imports=imports,
     imports_text=imports_text,
     other=other,
-    other_text=other_text
+    other_text=other_text,
+    functions_code=functions_code,
+    functions_doc=functions_doc,
+    classes_code=classes_code,
+    classes_doc=classes_doc
 )
 
 with st.expander("Expand to view prompt"):
