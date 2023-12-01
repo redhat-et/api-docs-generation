@@ -1,3 +1,4 @@
 html2text
 ibm-generative-ai
 tree-sitter
+openai
