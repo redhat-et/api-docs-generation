@@ -23,6 +23,7 @@ logging.info("starting app")
 st.set_page_config(
     page_title="API Docs Generator",
     page_icon="📄",
+    layout="wide"
 )
 
 st.title("API Docs Generator 📄", anchor="center")
