@@ -1,4 +1,4 @@
-from utils import check_prompt_token_limit, generate_text, generate_prompt, generate_text_using_OpenAI
+from utils import check_prompt_token_limit, generate_text, generate_prompt, generate_text_using_OpenAI, eval_using_model
 import os
 import streamlit as st
 import logging
@@ -178,8 +178,7 @@ def main(prompt_success, prompt_diff, actual_doc):
     logging.info("requesting generation from model %s", model_id)
 
     if model_id =="OpenAI/gpt3.5":
-        result = generate_text_using_OpenAI(
-        model_id, prompt)
+        result = generate_text_using_OpenAI(prompt)
         
     else:
         result = generate_text(
@@ -214,6 +213,10 @@ def main(prompt_success, prompt_diff, actual_doc):
         cosine_sim = cosine_similarity(tfidf_matrix[0], tfidf_matrix[1])
         st.write(f"Cosine Similarity Score: {cosine_sim[0][0]:.2f}")
         st.write("###") # add a line break
+        
+        st.markdown("**GenAI evaluation scores:**")
+        score = eval_using_model(result)
+        st.write(score)
 
 
 if st.button("Generate API Documentation"):

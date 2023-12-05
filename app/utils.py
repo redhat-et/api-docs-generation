@@ -200,7 +200,7 @@ def generate_text(
 
     return generated_patch
 
-def generate_text_using_OpenAI(model_id: str, prompt: str):
+def generate_text_using_OpenAI(prompt: str):
     
     creds = (OPENAI_API_KEY)
     client = OpenAI()
@@ -214,4 +214,29 @@ def generate_text_using_OpenAI(model_id: str, prompt: str):
     response = completion.choices[0].message.content
     print(response)
     return response
+
+
+def eval_using_model(result):
+    
+    prompt = f"""Below is an API documentation for code, rate the documentation on factors such as Accuracy, Relevance,  Clarity, Completeness and Readability. Rate it on a scale of 1 to 5. 1 for the poorest documentation and 5 for the best.
+    
+    Example: 
+    
+    Accuracy: 1 
+    Relevance: 2 
+    Clarity: 3
+    Completeness: 4 
+    Readability: 5
+    Overall Score: 3 
+    
+    Documentation:
+    
+    {result}
+    
+    GenAI Score: """
+    response = generate_text_using_OpenAI(prompt)
+    return response
+    
+    
+    
 
