@@ -92,33 +92,18 @@ with st.sidebar:
     instruction = st.text_area(
         "Instruction",
 """
-Create documentation for the code fragments below
+You are an AI system specialized at generating API documentation for the provided Python code. You will be provided functions, classes, or Python scripts. Your documentation should include:
 
-For Example:
+1. Introduction: Briefly describe the purpose of the API and its intended use.   
+2. Functions: Document each API function, including:
+    - Description: Clearly explain what the endpoint or function does.
+    - Parameters: List and describe each parameter, including data types and any constraints.
+    - Return Values: Specify the data type and possible values returned.
 
-Function:
+3. Error Handling: Describe possible error responses and their meanings.
 
-def in_validity_period(self) -> bool:
-        ###
-        Returns whether or not this `Identity` is currently within its self-stated validity period.
+Make sure to follow this output structure to create API documentation that is clear, concise, accurate, and user-centric. Avoid speculative information and prioritize accuracy and completeness.
 
-        NOTE: As noted in `Identity.__init__`, this is not a verifying wrapper;
-        the check here only asserts whether the *unverified* identity's claims
-        are within their validity period.
-        ###
-
-        now = datetime.now(timezone.utc).timestamp()
-
-        if self._nbf is not None:
-            return self._nbf <= now < self._exp
-        else:
-            return now < self._exp
-
-Documentation:
-
-Returns whether or not this Identity is currently within its self-stated validity period.
-NOTE: As noted in Identity.__init__, this is not a verifying wrapper; the check here only asserts whether the         unverified identity's claims are within their validity period.",
-    )
 """
     )
 
@@ -204,18 +189,18 @@ def main(prompt_success, prompt_diff, actual_doc):
         # rouge score addition
         scorer = rouge_scorer.RougeScorer(['rouge1', 'rouge2', 'rougeL'], use_stemmer=True)
         rouge_scores = scorer.score(actual_doc, result)
-        st.write(f"ROUGE-1 Score:{rouge_scores['rouge1'].fmeasure:.2f}")
-        st.write(f"ROUGE-2 Score: {rouge_scores['rouge2'].fmeasure:.2f}")
-        st.write(f"ROUGE-L Score: {rouge_scores['rougeL'].fmeasure:.2f}")
+        st.markdown(f"ROUGE-1 Score:{rouge_scores['rouge1'].fmeasure:.2f}", help="ROUGE-1 refers to the overlap of unigrams (each word) between the system and reference summaries")
+        st.markdown(f"ROUGE-2 Score: {rouge_scores['rouge2'].fmeasure:.2f}", help="ROUGE-2 refers to the overlap of bigrams between the system and reference summaries")
+        st.markdown(f"ROUGE-L Score: {rouge_scores['rougeL'].fmeasure:.2f}", help="Longest common subsequence problem takes into account sentence-level structure similarity naturally and identifies longest co-occurring in sequence n-grams automatically")
 
         # calc cosine similarity
         vectorizer = TfidfVectorizer()
         tfidf_matrix = vectorizer.fit_transform([actual_doc, result])
         cosine_sim = cosine_similarity(tfidf_matrix[0], tfidf_matrix[1])
-        st.write(f"Cosine Similarity Score: {cosine_sim[0][0]:.2f}")
-        st.write("###") # add a line break
+        st.markdown(f"Cosine Similarity Score: {cosine_sim[0][0]:.2f}", help="0 cosine similarity means no similarity between generated and actual API documentation, 1 means they are same")
+        st.markdown("###") # add a line break
         
-        st.markdown("**GenAI evaluation scores:**")
+        st.markdown("**GenAI evaluation scores:**", help="Use OpenAI GPT 3 to evaluate the result of the generated API doc")
         score = eval_using_model(result)
         st.write(score)
 
