@@ -6,6 +6,8 @@ import json
 from rouge_score import rouge_scorer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+from readability import Readability
+import textstat
 
 
 GENAI_KEY = os.environ["GENAI_KEY"]
@@ -203,6 +205,21 @@ def main(prompt_success, prompt_diff, actual_doc):
         st.markdown("**GenAI evaluation scores:**", help="Use OpenAI GPT 3 to evaluate the result of the generated API doc")
         score = eval_using_model(result)
         st.write(score)
+        
+        # Readability Scores
+        st.subheader("Readability Metrics")
+
+        # Flesch Reading Ease
+        flesch_reading_ease = textstat.flesch_reading_ease(result)
+        st.markdown(f"Flesch Reading Ease: {flesch_reading_ease:.2f}", help="Flesch Reading Ease measures how easy a text is to read. Higher scores indicate easier readability. Ranges 0-100")
+
+        # Dale Chall Readability
+        dale_chall_readability = textstat.dale_chall_readability_score(result)
+        st.markdown(f"Dale Chall Readability: {dale_chall_readability:.2f}", help="The Dale-Chall Formula is a readability formula based on the use of familiar words, rather than syllable or letter counts. Lower scores mean more difficult words. No fixed ranges.")
+
+        # Automated Readability Index (ARI)
+        ari = textstat.automated_readability_index(result)
+        st.markdown(f"ARI (Automated Readability Index): {ari:.2f}", help="ARI relies on a factor of characters per word, instead of the usual syllables per word. ARI corresponds to a U.S. grade level. Higher scores indicate more advanced reading levels.")
 
 
 if st.button("Generate API Documentation"):
