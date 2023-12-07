@@ -211,7 +211,7 @@ def main(prompt_success, prompt_diff, actual_doc):
 
         # Flesch Reading Ease
         flesch_reading_ease = textstat.flesch_reading_ease(result)
-        st.markdown(f"Flesch Reading Ease: {flesch_reading_ease:.2f}", help="Flesch Reading Ease measures how easy a text is to read. Higher scores indicate easier readability. Ranges 0-100")
+        st.markdown(f"Flesch Reading Ease: {flesch_reading_ease:.2f}", help="Flesch Reading Ease measures how easy a text is to read. Higher scores indicate easier readability. Ranges 0-100 and a negative score indicates a more challenging text.")
 
         # Dale Chall Readability
         dale_chall_readability = textstat.dale_chall_readability_score(result)
