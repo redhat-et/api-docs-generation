@@ -61,11 +61,12 @@ Function:
 
     if functions_code and functions_code_text_joined:
         prompt += f"""
-
-
 Function Code:
 
 {functions_code_text_joined}
+
+Function Documentation:
+
 
 """
 
@@ -128,6 +129,7 @@ Here are the import statements for reference:
 Here are other lines of code for reference:
 
 {other_text_joined}
+
 
 """
 
