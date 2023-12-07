@@ -215,7 +215,7 @@ def main(prompt_success, prompt_diff, actual_doc):
 
         # Dale Chall Readability
         dale_chall_readability = textstat.dale_chall_readability_score(result)
-        st.markdown(f"Dale Chall Readability: {dale_chall_readability:.2f}", help="The Dale-Chall Formula is an accurate readability formula for the simple reason that it is based on the use of familiar words, rather than syllable or letter counts. Lower scores mean more difficult words. No fixed ranges.")
+        st.markdown(f"Dale Chall Readability: {dale_chall_readability:.2f}", help="The Dale-Chall Formula is a readability formula based on the use of familiar words, rather than syllable or letter counts. Lower scores mean more difficult words. No fixed ranges.")
 
         # Automated Readability Index (ARI)
         ari = textstat.automated_readability_index(result)
