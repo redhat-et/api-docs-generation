@@ -97,6 +97,8 @@ Class code:
 
 {classes_code_text_joined}
 
+Class Documentation:
+
 """ 
     if classes_doc and classes_doc_text_joined:
         prompt += f"""
