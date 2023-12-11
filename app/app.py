@@ -70,6 +70,8 @@ with st.sidebar:
             "ibm/granite-3b-code-plus-v1",
             "meta-llama/llama-2-70b",
             "OpenAI/gpt3.5",
+            "bigcode/starcoder",
+            "tiiuae/falcon-180b"
         ],
     )
 

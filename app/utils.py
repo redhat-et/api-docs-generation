@@ -61,11 +61,12 @@ Function:
 
     if functions_code and functions_code_text_joined:
         prompt += f"""
-
-
 Function Code:
 
 {functions_code_text_joined}
+
+Function Documentation:
+
 
 """
 
@@ -95,6 +96,8 @@ Class:
 Class code:
 
 {classes_code_text_joined}
+
+Class Documentation:
 
 """ 
     if classes_doc and classes_doc_text_joined:
@@ -128,6 +131,7 @@ Here are the import statements for reference:
 Here are other lines of code for reference:
 
 {other_text_joined}
+
 
 """
 
