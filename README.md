@@ -4,7 +4,7 @@ The objective of this project is to conduct a Proof of Concept (POC) exploring t
 
 ## Links
 
-* [Project Report](https://docs.google.com/document/d/1HYmC_LHrPTeyhSiCWqz0tGD-CRjjRrvmqvMYMSJjegU/edit?usp=sharingit status)
+* [Project Report](https://docs.google.com/document/d/1HYmC_LHrPTeyhSiCWqz0tGD-CRjjRrvmqvMYMSJjegU/edit?usp=sharing)
 * [Slides](https://docs.google.com/presentation/d/1xZ4729RXLi7FGjMAGuLzF8BUi5eH4qRDbmqs9eib30Q/edit?usp=sharing)
 * [Planning and Design Doc](https://docs.google.com/document/d/1ToF-Z_XUAqUrpwHuCqFls85TwPYI7RT_vVFMuJDA7wU/edit?usp=sharing)
 
