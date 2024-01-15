@@ -1,13 +1,9 @@
-from dotenv import load_dotenv
 from genai.credentials import Credentials
 from genai.model import Model
 from genai.schemas import GenerateParams
 import json
-import os
-import re
 from openai import OpenAI
 
-import logging
 
 
 def generate_prompt(
@@ -143,7 +139,6 @@ def check_prompt_token_limit(
     model_id: str,
     prompt: str,
     GENAI_KEY,
-    GENAI_API
 ) -> str:
     """
     Check if a given prompt is within the token limit of a model.
@@ -157,7 +152,7 @@ def check_prompt_token_limit(
     """
 
     # Initialize credentials and model
-    creds = Credentials(GENAI_KEY, api_endpoint=GENAI_API)
+    creds = Credentials(GENAI_KEY)
     model = Model(model_id, credentials=creds)
 
     # Get the model card and token limit
@@ -177,9 +172,9 @@ def check_prompt_token_limit(
         return False, diff
 
 def generate_text(
-    model_id: str, prompt: str, decoding_method: str, max_new_tokens: int, temperature: float, top_k: int, top_p: float, GENAI_KEY, GENAI_API 
+    model_id: str, prompt: str, decoding_method: str, max_new_tokens: int, temperature: float, top_k: int, top_p: float, genai_key: str, 
 ):
-    creds = Credentials(GENAI_KEY, api_endpoint=GENAI_API)
+    creds = Credentials(genai_key)
 
     # Instantiate parameters for text generation
     params = GenerateParams(
@@ -201,23 +196,20 @@ def generate_text(
 
     return generated_patch
 
-def generate_text_using_OpenAI(prompt: str, OPENAI_API_KEY):
-    
-    creds = (OPENAI_API_KEY)
-    client = OpenAI()
+def generate_text_using_OpenAI(prompt: str, openai_key: str):
+    client = OpenAI(api_key=openai_key)
     completion = client.chat.completions.create(
       model="gpt-3.5-turbo",
       messages=[
         {"role": "system", "content": f"{prompt}"},
       ]
     )
-    
     response = completion.choices[0].message.content
     print(response)
     return response
 
 
-def eval_using_model(result):
+def eval_using_model(result: str, openai_key: str):
     
     prompt = f"""Below is an API documentation for code, rate the documentation on factors such as Accuracy, Relevance,  Clarity, Completeness and Readability. Rate it on a scale of 1 to 5. 1 for the poorest documentation and 5 for the best.
     
@@ -235,7 +227,7 @@ def eval_using_model(result):
     {result}
     
     GenAI Score: """
-    response = generate_text_using_OpenAI(prompt)
+    response = generate_text_using_OpenAI(prompt, openai_key)
     return response
     
     

@@ -1,17 +1,22 @@
 from utils import check_prompt_token_limit, generate_text, generate_prompt, generate_text_using_OpenAI, eval_using_model
-import os
 import streamlit as st
 import logging
 import json
 from rouge_score import rouge_scorer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-from readability import Readability
-import textstat
+from textstat import textstat
+import os
+
+# Set theme, title, and icon
+st.set_page_config(
+    page_title="API Docs Generator",
+    page_icon="📄",
+    layout="wide"
+)
 
 # Get environment variables
 GENAI_KEY = st.text_input("Enter GENAI_KEY:")
-GENAI_API = st.text_input("Enter GENAI_API:")
 OPENAI_API_KEY = st.text_input("Enter OPENAI_API Key:")
 
 
@@ -23,12 +28,6 @@ logging.basicConfig(
 
 logging.info("starting app")
 
-# Set theme, title, and icon
-st.set_page_config(
-    page_title="API Docs Generator",
-    page_icon="📄",
-    layout="wide"
-)
 
 st.title("API Docs Generator 📄", anchor="center")
 
@@ -51,8 +50,9 @@ file = st.selectbox(
 logging.debug("user selected datapoint")
 
 # load nested data
-dataset_path = "../data/raw/chunked_data.json"
-with open(dataset_path, 'r') as f:
+DATASET_PATH = os.getenv("DATASET_PATH", "data/raw/chunked_data.json")
+
+with open(DATASET_PATH, 'r', encoding='utf-8') as f:
 		data = json.load(f)
 
 logging.debug("loaded data")
@@ -161,7 +161,7 @@ prompt = generate_prompt(
 with st.expander("Expand to view prompt"):
     st.text_area(label="prompt", value=prompt, height=600)
 
-def main(prompt_success, prompt_diff, actual_doc):
+def main(prompt_success: bool, prompt_diff: int, actual_doc: str):
     if not prompt_success:
         st.write(f"Prompt is {prompt_diff} tokens too long, please shorten it")
         return
@@ -207,7 +207,7 @@ def main(prompt_success, prompt_diff, actual_doc):
         st.markdown("###") # add a line break
         
         st.markdown("**GenAI evaluation scores:**", help="Use OpenAI GPT 3 to evaluate the result of the generated API doc")
-        score = eval_using_model(result)
+        score = eval_using_model(result, openai_key=OPENAI_API_KEY)
         st.write(score)
         
         # Readability Scores
@@ -227,9 +227,8 @@ def main(prompt_success, prompt_diff, actual_doc):
 
 
 if st.button("Generate API Documentation"):
-    
     if model_id != "OpenAI/gpt3.5":
-        prompt_success, prompt_diff = check_prompt_token_limit(model_id, prompt, GENAI_KEY, GENAI_API)
+        prompt_success, prompt_diff = check_prompt_token_limit(model_id, prompt, GENAI_KEY)
 
         main(prompt_success, prompt_diff, actual_doc)
     else:
