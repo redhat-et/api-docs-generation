@@ -14,6 +14,4 @@ RUN pip install -r requirements.txt
 
 COPY ./app  .
 
-# COPY --from=builder ./filtered-backports.json ./data/backports.json
-
 CMD ["streamlit", "run",  "app.py", "--browser.gatherUsageStats", "false", "--server.address", "0.0.0.0"]
