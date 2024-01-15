@@ -9,18 +9,10 @@ from sklearn.metrics.pairwise import cosine_similarity
 from readability import Readability
 import textstat
 
-
-# Function to get environment variable value or raise an error if not provided
-def get_env_variable(key):
-    value = os.getenv(key)
-    if value is None:
-        raise ValueError(f"Error: Environment variable {key} not provided.")
-    return value
-
 # Get environment variables
-GENAI_KEY = st.text_input("Enter GENAI_KEY:", get_env_variable("GENAI_KEY"))
-GENAI_API = st.text_input("Enter GENAI_API:", get_env_variable("GENAI_API"))
-OPENAI_API_KEY = st.text_input("Enter OPENAI_API Key:", get_env_variable("OPENAI_API_KEY"))
+GENAI_KEY = st.text_input("Enter GENAI_KEY:")
+GENAI_API = st.text_input("Enter GENAI_API:")
+OPENAI_API_KEY = st.text_input("Enter OPENAI_API Key:")
 
 
 logging.basicConfig(
