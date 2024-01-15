@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-doc-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api-doc
+  template:
+    metadata:
+      labels:
+        app: api-doc
+    spec:
+      imagePullSecrets:
+      - name: dockerhub-secret
+      containers:
+      - name: api-doc-container
+        image: docker.io/ochatterjee/api-docs-gen:v0.1.0
+        ports:
+        - containerPort: 80
