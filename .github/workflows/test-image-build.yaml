@@ -32,6 +32,8 @@ jobs:
           file: ${{ env.context }}/Dockerfile
           push: true
           tags: ${{ env.DOCKER_HUB_USERNAME }}/${{ env.image_name }}:${{ env.IMAGE_TAGS }}
+          username: ${{ env.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Test image
         run: |
           echo "Running: docker run ${{ env.image_name }}:${{ env.IMAGE_TAGS}}"
