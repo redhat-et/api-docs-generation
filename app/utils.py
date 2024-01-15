@@ -9,11 +9,6 @@ from openai import OpenAI
 
 import logging
 
-load_dotenv()
-
-OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
-GENAI_KEY = os.environ["GENAI_KEY"]
-GENAI_API = os.environ["GENAI_API"]
 
 def generate_prompt(
     instruction: str,
@@ -146,7 +141,9 @@ def get_data() -> dict[str, list[dict]]:
 
 def check_prompt_token_limit(
     model_id: str,
-    prompt: str
+    prompt: str,
+    GENAI_KEY,
+    GENAI_API
 ) -> str:
     """
     Check if a given prompt is within the token limit of a model.
@@ -180,7 +177,7 @@ def check_prompt_token_limit(
         return False, diff
 
 def generate_text(
-    model_id: str, prompt: str, decoding_method: str, max_new_tokens: int, temperature: float, top_k: int, top_p: float
+    model_id: str, prompt: str, decoding_method: str, max_new_tokens: int, temperature: float, top_k: int, top_p: float, GENAI_KEY, GENAI_API 
 ):
     creds = Credentials(GENAI_KEY, api_endpoint=GENAI_API)
 
@@ -204,7 +201,7 @@ def generate_text(
 
     return generated_patch
 
-def generate_text_using_OpenAI(prompt: str):
+def generate_text_using_OpenAI(prompt: str, OPENAI_API_KEY):
     
     creds = (OPENAI_API_KEY)
     client = OpenAI()

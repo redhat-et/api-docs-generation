@@ -10,8 +10,18 @@ from readability import Readability
 import textstat
 
 
-GENAI_KEY = os.environ["GENAI_KEY"]
-GENAI_API = os.environ["GENAI_API"]
+# Function to get environment variable value or raise an error if not provided
+def get_env_variable(key):
+    value = os.getenv(key)
+    if value is None:
+        raise ValueError(f"Error: Environment variable {key} not provided.")
+    return value
+
+# Get environment variables
+GENAI_KEY = st.text_input("Enter GENAI_KEY:", get_env_variable("GENAI_KEY"))
+GENAI_API = st.text_input("Enter GENAI_API:", get_env_variable("GENAI_API"))
+OPENAI_API_KEY = st.text_input("Enter OPENAI_API Key:", get_env_variable("OPENAI_API_KEY"))
+
 
 logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s",
@@ -168,11 +178,11 @@ def main(prompt_success, prompt_diff, actual_doc):
     logging.info("requesting generation from model %s", model_id)
 
     if model_id =="OpenAI/gpt3.5":
-        result = generate_text_using_OpenAI(prompt)
+        result = generate_text_using_OpenAI(prompt, OPENAI_API_KEY)
         
     else:
         result = generate_text(
-        model_id, prompt, decoding_method, max_new_tokens, temperature, top_k, top_p
+        model_id, prompt, decoding_method, max_new_tokens, temperature, top_k, top_p, GENAI_KEY
         )
     col1, col2, col3 = st.columns([1.5, 1.5, 0.5])
     
@@ -227,7 +237,7 @@ def main(prompt_success, prompt_diff, actual_doc):
 if st.button("Generate API Documentation"):
     
     if model_id != "OpenAI/gpt3.5":
-        prompt_success, prompt_diff = check_prompt_token_limit(model_id, prompt)
+        prompt_success, prompt_diff = check_prompt_token_limit(model_id, prompt, GENAI_KEY, GENAI_API)
 
         main(prompt_success, prompt_diff, actual_doc)
     else:
