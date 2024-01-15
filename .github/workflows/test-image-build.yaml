@@ -30,7 +30,7 @@ jobs:
         with:
           context: .
           file: ${{ env.context }}/Dockerfile
-          push: false
+          push: true
           tags: ${{ env.DOCKER_HUB_USERNAME }}/${{ env.image_name }}:${{ env.IMAGE_TAGS }}
       - name: Test image
         run: |
