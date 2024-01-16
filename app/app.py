@@ -20,9 +20,10 @@ st.set_page_config(page_title="API Docs Generator", page_icon="📄", layout="wi
 
 
 # Get environment variables
-GENAI_KEY = st.text_input("Enter GENAI_KEY:")
-GENAI_API = st.text_input("Enter GENAI_API:")
-OPENAI_API_KEY = st.text_input("Enter OPENAI_API Key:")
+GENAI_KEY = st.text_input("Enter GENAI_KEY:", get_env_variable("GENAI_KEY"))
+OPENAI_API_KEY = st.text_input(
+    "Enter OPENAI_API Key:", get_env_variable("OPENAI_API_KEY")
+)
 
 logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s",
@@ -100,8 +101,7 @@ with st.sidebar:
 
     instruction = st.text_area(
         "Instruction",
-        """
-You are an AI system specialized at generating API documentation for the provided Python code. You will be provided functions, classes, or Python scripts. Your documentation should include:
+        """You are an AI system specialized at generating API documentation for the provided Python code. You will be provided functions, classes, or Python scripts. Your documentation should include:
 
 1. Introduction: Briefly describe the purpose of the API and its intended use.   
 2. Functions: Document each API function, including:
