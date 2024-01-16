@@ -1,9 +1,13 @@
-from genai.credentials import Credentials
-from genai.model import Model
-from genai.schemas import GenerateParams
+from genai import Credentials, Client
+from genai.text.generation import TextGenerationParameters
+from genai.text.tokenization import (
+    TextTokenizationParameters,
+    TextTokenizationReturnOptions,
+    TextTokenizationCreateResults,
+)
 import json
 from openai import OpenAI
-
+import os
 
 
 def generate_prompt(
@@ -27,16 +31,15 @@ def generate_prompt(
     classes_doc: bool = False,
     classes_doc_text: str = "",
 ) -> str:
-
-    functions_text_joined = '\n'.join(functions_text)
-    classes_text_joined = '\n'.join(classes_text)
-    documentation_text_joined = '\n'.join(documentation_text)
-    imports_text_joined = '\n'.join(imports_text)
-    other_text_joined = '\n'.join(other_text)
-    functions_code_text_joined = '\n'.join(functions_code_text)
-    functions_doc_text_joined = '\n'.join(functions_doc_text)
-    classes_code_text_joined = '\n'.join(classes_code_text)
-    classes_doc_text_joined= '\n'.join( classes_doc_text)
+    functions_text_joined = "\n".join(functions_text)
+    classes_text_joined = "\n".join(classes_text)
+    documentation_text_joined = "\n".join(documentation_text)
+    imports_text_joined = "\n".join(imports_text)
+    other_text_joined = "\n".join(other_text)
+    functions_code_text_joined = "\n".join(functions_code_text)
+    functions_doc_text_joined = "\n".join(functions_doc_text)
+    classes_code_text_joined = "\n".join(classes_code_text)
+    classes_doc_text_joined = "\n".join(classes_doc_text)
     # print(functions_text_joined)
 
     prompt = f"""{instruction}\n"""
@@ -90,7 +93,7 @@ Class code:
 
 Class Documentation:
 
-""" 
+"""
     if classes_doc and classes_doc_text_joined:
         prompt += f"""
 
@@ -135,11 +138,12 @@ def get_data() -> dict[str, list[dict]]:
 
     return code
 
+
 def check_prompt_token_limit(
     model_id: str,
     prompt: str,
     GENAI_KEY,
-) -> str:
+) -> (bool, str):
     """
     Check if a given prompt is within the token limit of a model.
 
@@ -153,31 +157,45 @@ def check_prompt_token_limit(
 
     # Initialize credentials and model
     creds = Credentials(GENAI_KEY)
-    model = Model(model_id, credentials=creds)
+    client = Client(credentials=creds)
 
     # Get the model card and token limit
-    model_card = model.info()
-    token_limit = int(model_card.token_limit)
+    model_details = client.model.retrieve(id=model_id)
+    limits = model_details.result.token_limits
+    token_limit = limits[0].token_limit
 
     # Tokenize the prompt and count tokens
-    tokenized_response = model.tokenize([prompt], return_tokens=True)
-    prompt_tokens = int(tokenized_response[0].token_count)
-    
+    responses = list(
+        client.text.tokenization.create(
+            input=prompt,
+            model_id=model_id,
+            parameters=TextTokenizationParameters(
+                return_options=TextTokenizationReturnOptions(tokens=True)
+            ),
+        )
+    )
+    results: TextTokenizationCreateResults = responses[0].results
+    prompt_tokens = results[0].token_count
     diff = prompt_tokens - token_limit
 
     # Check if prompt is within or over the token limit
-    if token_limit >= prompt_tokens:
-        return True, diff
-    else:
-        return False, diff
+    return (token_limit >= prompt_tokens, diff)
+
 
 def generate_text(
-    model_id: str, prompt: str, decoding_method: str, max_new_tokens: int, temperature: float, top_k: int, top_p: float, genai_key: str, 
+    model_id: str,
+    prompt: str,
+    decoding_method: str,
+    max_new_tokens: int,
+    temperature: float,
+    top_k: int,
+    top_p: float,
+    genai_key: str,
 ):
     creds = Credentials(genai_key)
 
     # Instantiate parameters for text generation
-    params = GenerateParams(
+    params = TextGenerationParameters(
         decoding_method=decoding_method,
         max_new_tokens=max_new_tokens,
         temperature=temperature,
@@ -186,23 +204,25 @@ def generate_text(
     )
 
     # Instantiate a model proxy object to send your requests
-    model = Model(model_id, credentials=creds, params=params)
-
-    response = model.generate([prompt])
-
+    client = Client(credentials=creds)
+    responses = list(
+        client.text.generation.create(
+            model_id=model_id, inputs=[prompt], parameters=params
+        )
+    )
+    response = responses[0].results[0]
     print(response)
-
-    generated_patch = response[0].generated_text
-
+    generated_patch = response.generated_text
     return generated_patch
+
 
 def generate_text_using_OpenAI(prompt: str, openai_key: str):
     client = OpenAI(api_key=openai_key)
     completion = client.chat.completions.create(
-      model="gpt-3.5-turbo",
-      messages=[
-        {"role": "system", "content": f"{prompt}"},
-      ]
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": f"{prompt}"},
+        ],
     )
     response = completion.choices[0].message.content
     print(response)
@@ -210,7 +230,6 @@ def generate_text_using_OpenAI(prompt: str, openai_key: str):
 
 
 def eval_using_model(result: str, openai_key: str):
-    
     prompt = f"""Below is an API documentation for code, rate the documentation on factors such as Accuracy, Relevance,  Clarity, Completeness and Readability. Rate it on a scale of 1 to 5. 1 for the poorest documentation and 5 for the best.
     
     Example: 
@@ -229,7 +248,16 @@ def eval_using_model(result: str, openai_key: str):
     GenAI Score: """
     response = generate_text_using_OpenAI(prompt, openai_key)
     return response
-    
-    
-    
 
+
+def indicate_key_presence(env: str) -> str:
+    """
+    This function will either return an empty string,
+    or a string of '*' characters indicating the presence
+    of said key.
+    """
+    key = os.getenv(env)
+    if key:
+        return "*" * len(key)
+    else:
+        return ""

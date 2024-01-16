@@ -4,6 +4,7 @@ from utils import (
     generate_prompt,
     generate_text_using_OpenAI,
     eval_using_model,
+    indicate_key_presence,
 )
 import os
 import streamlit as st
@@ -19,10 +20,42 @@ import os
 st.set_page_config(page_title="API Docs Generator", page_icon="📄", layout="wide")
 
 
-# Get environment variables
-GENAI_KEY = st.text_input("Enter GENAI_KEY:")
-GENAI_API = st.text_input("Enter GENAI_API:")
-OPENAI_API_KEY = st.text_input("Enter OPENAI_API Key:")
+def get_env_variable(var: str) -> str:
+    env = os.getenv(var)
+    if not env:
+        raise ValueError(f"environment variable '{var}' is not set")
+    return env
+
+
+# Allow the user to provide their own API keys
+user_genai_key = st.text_input(
+    "Enter GENAI_KEY:", placeholder=indicate_key_presence("GENAI_KEY")
+)
+user_openai_key = st.text_input(
+    "Enter OPENAI_API Key:", placeholder=indicate_key_presence("OPENAI_API_KEY")
+)
+
+
+# maybe it's a bit redundant to define these two functions but whatever
+def GENAI_KEY() -> str:
+    """
+    Grabs the GENAI_KEY at the time that it's needed,
+    either from the user input or from the environment
+    """
+    if user_genai_key:
+        return user_genai_key.strip()
+    return get_env_variable("GENAI_KEY")
+
+
+def OPENAI_API_KEY() -> str:
+    """
+    Grabs the OPENAI_API_KEY at the time that it's needed,
+    either from the user input or from the environment
+    """
+    if user_openai_key:
+        return user_openai_key.strip()
+    return get_env_variable("OPENAI_API_KEY")
+
 
 logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s",
@@ -100,8 +133,7 @@ with st.sidebar:
 
     instruction = st.text_area(
         "Instruction",
-        """
-You are an AI system specialized at generating API documentation for the provided Python code. You will be provided functions, classes, or Python scripts. Your documentation should include:
+        """You are an AI system specialized at generating API documentation for the provided Python code. You will be provided functions, classes, or Python scripts. Your documentation should include:
 
 1. Introduction: Briefly describe the purpose of the API and its intended use.   
 2. Functions: Document each API function, including:
@@ -174,7 +206,7 @@ def main(prompt_success: bool, prompt_diff: int, actual_doc: str):
     logging.info("requesting generation from model %s", model_id)
 
     if model_id == "OpenAI/gpt3.5":
-        result = generate_text_using_OpenAI(prompt, OPENAI_API_KEY)
+        result = generate_text_using_OpenAI(prompt, OPENAI_API_KEY())
 
     else:
         result = generate_text(
@@ -185,7 +217,7 @@ def main(prompt_success: bool, prompt_diff: int, actual_doc: str):
             temperature,
             top_k,
             top_p,
-            GENAI_KEY,
+            GENAI_KEY(),
         )
     col1, col2, col3 = st.columns([1.5, 1.5, 0.5])
 
@@ -239,7 +271,7 @@ def main(prompt_success: bool, prompt_diff: int, actual_doc: str):
             "**GenAI evaluation scores:**",
             help="Use OpenAI GPT 3 to evaluate the result of the generated API doc",
         )
-        score = eval_using_model(result, openai_key=OPENAI_API_KEY)
+        score = eval_using_model(result, openai_key=OPENAI_API_KEY())
         st.write(score)
 
         # Readability Scores
@@ -270,7 +302,7 @@ def main(prompt_success: bool, prompt_diff: int, actual_doc: str):
 if st.button("Generate API Documentation"):
     if model_id != "OpenAI/gpt3.5":
         prompt_success, prompt_diff = check_prompt_token_limit(
-            model_id, prompt, GENAI_KEY
+            model_id, prompt, GENAI_KEY()
         )
 
         main(prompt_success, prompt_diff, actual_doc)
