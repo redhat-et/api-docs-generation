@@ -14,6 +14,10 @@ spec:
     spec:
       imagePullSecrets:
       - name: dockerhub-secret
+      volumes:
+        - name: user-feedback-db
+          persistentVolumeClaim:
+            claimName: user-feedback-db
       containers:
       - name: api-doc-container
         image: docker.io/ochatterjee/api-docs-gen:v0.1.0
@@ -29,6 +33,8 @@ spec:
               secretKeyRef:
                 name: api-doc-secret
                 key: OPENAI_API_KEY
+          - name: FEEDBACK_DB
+            value: /mnt/user-feedback-db/feedback.db
         ports:
         - containerPort: 8501
         resources:
@@ -38,3 +44,6 @@ spec:
           requests:
             memory: "200Mi"
             cpu: "250m"
+        volumeMounts:
+          - mountPath: "/mnt/user-feedback-db"
+            name: user-feedback-db

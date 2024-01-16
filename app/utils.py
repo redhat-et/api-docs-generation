@@ -1,3 +1,6 @@
+import json
+import os
+from openai import OpenAI
 from genai import Credentials, Client
 from genai.text.generation import TextGenerationParameters
 from genai.text.tokenization import (
@@ -5,9 +8,6 @@ from genai.text.tokenization import (
     TextTokenizationReturnOptions,
     TextTokenizationCreateResults,
 )
-import json
-from openai import OpenAI
-import os
 
 
 def generate_prompt(
