@@ -1,6 +1,10 @@
-from genai.credentials import Credentials
-from genai.model import Model
-from genai.schemas import GenerateParams
+from genai import Credentials, Client
+from genai.text.generation import TextGenerationParameters
+from genai.text.tokenization import (
+    TextTokenizationParameters,
+    TextTokenizationReturnOptions,
+    TextTokenizationCreateResults,
+)
 import json
 from openai import OpenAI
 import os
@@ -139,7 +143,7 @@ def check_prompt_token_limit(
     model_id: str,
     prompt: str,
     GENAI_KEY,
-) -> str:
+) -> (bool, str):
     """
     Check if a given prompt is within the token limit of a model.
 
@@ -153,23 +157,29 @@ def check_prompt_token_limit(
 
     # Initialize credentials and model
     creds = Credentials(GENAI_KEY)
-    model = Model(model_id, credentials=creds)
+    client = Client(credentials=creds)
 
     # Get the model card and token limit
-    model_card = model.info()
-    token_limit = int(model_card.token_limit)
+    model_details = client.model.retrieve(id=model_id)
+    limits = model_details.result.token_limits
+    token_limit = limits[0].token_limit
 
     # Tokenize the prompt and count tokens
-    tokenized_response = model.tokenize([prompt], return_tokens=True)
-    prompt_tokens = int(tokenized_response[0].token_count)
-
+    responses = list(
+        client.text.tokenization.create(
+            input=prompt,
+            model_id=model_id,
+            parameters=TextTokenizationParameters(
+                return_options=TextTokenizationReturnOptions(tokens=True)
+            ),
+        )
+    )
+    results: TextTokenizationCreateResults = responses[0].results
+    prompt_tokens = results[0].token_count
     diff = prompt_tokens - token_limit
 
     # Check if prompt is within or over the token limit
-    if token_limit >= prompt_tokens:
-        return True, diff
-    else:
-        return False, diff
+    return (token_limit >= prompt_tokens, diff)
 
 
 def generate_text(
@@ -185,7 +195,7 @@ def generate_text(
     creds = Credentials(genai_key)
 
     # Instantiate parameters for text generation
-    params = GenerateParams(
+    params = TextGenerationParameters(
         decoding_method=decoding_method,
         max_new_tokens=max_new_tokens,
         temperature=temperature,
@@ -194,14 +204,15 @@ def generate_text(
     )
 
     # Instantiate a model proxy object to send your requests
-    model = Model(model_id, credentials=creds, params=params)
-
-    response = model.generate([prompt])
-
+    client = Client(credentials=creds)
+    responses = list(
+        client.text.generation.create(
+            model_id=model_id, inputs=[prompt], parameters=params
+        )
+    )
+    response = responses[0].results[0]
     print(response)
-
-    generated_patch = response[0].generated_text
-
+    generated_patch = response.generated_text
     return generated_patch
 
 
