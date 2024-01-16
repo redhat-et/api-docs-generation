@@ -16,7 +16,7 @@ from textstat import textstat
 import os
 
 # Set theme, title, and icon
-st.set_page_config(page_title="API Docs Generator", page_icon="📄" layout="wide")
+st.set_page_config(page_title="API Docs Generator", page_icon="📄", layout="wide")
 
 
 # Function to get environment variable value or raise an error if not provided
