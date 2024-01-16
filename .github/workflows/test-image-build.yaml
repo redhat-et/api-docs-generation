@@ -33,7 +33,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
           
       - name: Build image
-        run: docker build -t ${{ env.DOCKER_HUB_USERNAME }}/${{ env.image_name }}:${{ env.IMAGE_TAGS }} -f ${{ env.context }}/Dockerfile .
+        run: docker build --no-cache -t ${{ env.DOCKER_HUB_USERNAME }}/${{ env.image_name }}:${{ env.IMAGE_TAGS }} -f ${{ env.context }}/Dockerfile .
 
       - name: Push image
         run: docker push ${{ env.DOCKER_HUB_USERNAME }}/${{ env.image_name }}:${{ env.IMAGE_TAGS }}
