@@ -1,4 +1,6 @@
 html2text
-ibm-generative-ai
+# new ibm version breaks existing code,
+# use this for the time being
+ibm-generative-ai==0.6.1
 tree-sitter
 openai
