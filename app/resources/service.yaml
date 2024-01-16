@@ -13,11 +13,11 @@ spec:
 apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
-  name: streamlit-demo-app
+  name: streamlit-api-docs-demo
 spec:
   to:
     kind: Service
-    name: streamlit-demo-app
+    name: api-doc-service
   port:
     targetPort: 8501
   tls:

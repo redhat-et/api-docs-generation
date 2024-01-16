@@ -19,11 +19,38 @@ import os
 st.set_page_config(page_title="API Docs Generator", page_icon="📄", layout="wide")
 
 
-# Get environment variables
-GENAI_KEY = st.text_input("Enter GENAI_KEY:", get_env_variable("GENAI_KEY"))
-OPENAI_API_KEY = st.text_input(
-    "Enter OPENAI_API Key:", get_env_variable("OPENAI_API_KEY")
-)
+def get_env_variable(var: str) -> str:
+    env = os.getenv(var)
+    if not env:
+        raise ValueError(f"environment variable '{var}' is not set")
+    return env
+
+
+# Allow the user to provide their own API keys
+user_genai_key = st.text_input("Enter GENAI_KEY:")
+user_openai_key = st.text_input("Enter OPENAI_API Key:")
+
+
+# maybe it's a bit redundant to define these two functions but whatever
+def GENAI_KEY() -> str:
+    """
+    Grabs the GENAI_KEY at the time that it's needed,
+    either from the user input or from the environment
+    """
+    if user_genai_key:
+        return user_genai_key.strip()
+    return get_env_variable("GENAI_KEY")
+
+
+def OPENAI_API_KEY() -> str:
+    """
+    Grabs the OPENAI_API_KEY at the time that it's needed,
+    either from the user input or from the environment
+    """
+    if user_openai_key:
+        return user_openai_key.strip()
+    return get_env_variable("OPENAI_API_KEY")
+
 
 logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s",
@@ -174,7 +201,7 @@ def main(prompt_success: bool, prompt_diff: int, actual_doc: str):
     logging.info("requesting generation from model %s", model_id)
 
     if model_id == "OpenAI/gpt3.5":
-        result = generate_text_using_OpenAI(prompt, OPENAI_API_KEY)
+        result = generate_text_using_OpenAI(prompt, OPENAI_API_KEY())
 
     else:
         result = generate_text(
@@ -185,7 +212,7 @@ def main(prompt_success: bool, prompt_diff: int, actual_doc: str):
             temperature,
             top_k,
             top_p,
-            GENAI_KEY,
+            GENAI_KEY(),
         )
     col1, col2, col3 = st.columns([1.5, 1.5, 0.5])
 
@@ -239,7 +266,7 @@ def main(prompt_success: bool, prompt_diff: int, actual_doc: str):
             "**GenAI evaluation scores:**",
             help="Use OpenAI GPT 3 to evaluate the result of the generated API doc",
         )
-        score = eval_using_model(result, openai_key=OPENAI_API_KEY)
+        score = eval_using_model(result, openai_key=OPENAI_API_KEY())
         st.write(score)
 
         # Readability Scores
@@ -270,7 +297,7 @@ def main(prompt_success: bool, prompt_diff: int, actual_doc: str):
 if st.button("Generate API Documentation"):
     if model_id != "OpenAI/gpt3.5":
         prompt_success, prompt_diff = check_prompt_token_limit(
-            model_id, prompt, GENAI_KEY
+            model_id, prompt, GENAI_KEY()
         )
 
         main(prompt_success, prompt_diff, actual_doc)
