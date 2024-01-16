@@ -1,5 +1,7 @@
 html2text
-ibm-generative-ai
+# new ibm version breaks existing code,
+# use this for the time being
+ibm-generative-ai>=2.0.0
 python-dotenv
 streamlit-toggle-switch
 streamlit
@@ -7,3 +9,4 @@ rouge-score
 py-readability-metrics
 openai
 textstat
+scikit-learn

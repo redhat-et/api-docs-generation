@@ -1,0 +1,44 @@
+name: test-streamlit-image-build
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+    paths:
+      - app/**/*
+
+env:
+  DOCKER_HUB_USERNAME: ochatterjee
+
+jobs:
+  build:
+    env:
+      context: app
+      image_name: api-docs-gen
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Check and verify version.json
+        id: check_version
+        run: |
+          echo "IMAGE_TAGS=$(jq -r '.version' ${context}/version.json)" >> $GITHUB_ENV
+          
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ env.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          
+      - name: Build image
+        run: docker build --no-cache -t ${{ env.DOCKER_HUB_USERNAME }}/${{ env.image_name }}:${{ env.IMAGE_TAGS }} -f ${{ env.context }}/Dockerfile .
+
+      - name: Push image
+        run: docker push ${{ env.DOCKER_HUB_USERNAME }}/${{ env.image_name }}:${{ env.IMAGE_TAGS }}
+
+      - name: Test image
+        run: |
+          echo "Running: docker run ${{ env.image_name }}:${{ env.IMAGE_TAGS}}"
+          timeout --preserve-status 20s docker run -e GENAI_KEY='abc' -e GENAI_API='http://example.com' "${{ env.DOCKER_HUB_USERNAME }}/${{ env.image_name }}:${{ env.IMAGE_TAGS }}"

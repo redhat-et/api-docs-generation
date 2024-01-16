@@ -1,4 +1,11 @@
-from utils import check_prompt_token_limit, generate_text, generate_prompt, generate_text_using_OpenAI, eval_using_model
+from utils import (
+    check_prompt_token_limit,
+    generate_text,
+    generate_prompt,
+    generate_text_using_OpenAI,
+    eval_using_model,
+    indicate_key_presence,
+)
 import os
 import streamlit as st
 import logging
@@ -6,12 +13,49 @@ import json
 from rouge_score import rouge_scorer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-from readability import Readability
-import textstat
+from textstat import textstat
+import os
+
+# Set theme, title, and icon
+st.set_page_config(page_title="API Docs Generator", page_icon="📄", layout="wide")
 
 
-GENAI_KEY = os.environ["GENAI_KEY"]
-GENAI_API = os.environ["GENAI_API"]
+def get_env_variable(var: str) -> str:
+    env = os.getenv(var)
+    if not env:
+        raise ValueError(f"environment variable '{var}' is not set")
+    return env
+
+
+# Allow the user to provide their own API keys
+user_genai_key = st.text_input(
+    "Enter GENAI_KEY:", placeholder=indicate_key_presence("GENAI_KEY")
+)
+user_openai_key = st.text_input(
+    "Enter OPENAI_API Key:", placeholder=indicate_key_presence("OPENAI_API_KEY")
+)
+
+
+# maybe it's a bit redundant to define these two functions but whatever
+def GENAI_KEY() -> str:
+    """
+    Grabs the GENAI_KEY at the time that it's needed,
+    either from the user input or from the environment
+    """
+    if user_genai_key:
+        return user_genai_key.strip()
+    return get_env_variable("GENAI_KEY")
+
+
+def OPENAI_API_KEY() -> str:
+    """
+    Grabs the OPENAI_API_KEY at the time that it's needed,
+    either from the user input or from the environment
+    """
+    if user_openai_key:
+        return user_openai_key.strip()
+    return get_env_variable("OPENAI_API_KEY")
+
 
 logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s",
@@ -20,13 +64,6 @@ logging.basicConfig(
 )
 
 logging.info("starting app")
-
-# Set theme, title, and icon
-st.set_page_config(
-    page_title="API Docs Generator",
-    page_icon="📄",
-    layout="wide"
-)
 
 st.title("API Docs Generator 📄", anchor="center")
 
@@ -42,16 +79,17 @@ file = st.selectbox(
         "transparency",
         "verify_models",
         "verify_policy",
-        "verify_verifier"
+        "verify_verifier",
     ],
 )
 
 logging.debug("user selected datapoint")
 
 # load nested data
-dataset_path = "../data/raw/chunked_data.json"
-with open(dataset_path, 'r') as f:
-		data = json.load(f)
+DATASET_PATH = os.getenv("DATASET_PATH", "data/raw/chunked_data.json")
+
+with open(DATASET_PATH, "r", encoding="utf-8") as f:
+    data = json.load(f)
 
 logging.debug("loaded data")
 
@@ -71,7 +109,7 @@ with st.sidebar:
             "meta-llama/llama-2-70b",
             "OpenAI/gpt3.5",
             "bigcode/starcoder",
-            "tiiuae/falcon-180b"
+            "tiiuae/falcon-180b",
         ],
     )
 
@@ -95,8 +133,7 @@ with st.sidebar:
 
     instruction = st.text_area(
         "Instruction",
-"""
-You are an AI system specialized at generating API documentation for the provided Python code. You will be provided functions, classes, or Python scripts. Your documentation should include:
+        """You are an AI system specialized at generating API documentation for the provided Python code. You will be provided functions, classes, or Python scripts. Your documentation should include:
 
 1. Introduction: Briefly describe the purpose of the API and its intended use.   
 2. Functions: Document each API function, including:
@@ -108,7 +145,7 @@ You are an AI system specialized at generating API documentation for the provide
 
 Make sure to follow this output structure to create API documentation that is clear, concise, accurate, and user-centric. Avoid speculative information and prioritize accuracy and completeness.
 
-"""
+""",
     )
 
     st.write("Prompt Elements")
@@ -159,7 +196,8 @@ prompt = generate_prompt(
 with st.expander("Expand to view prompt"):
     st.text_area(label="prompt", value=prompt, height=600)
 
-def main(prompt_success, prompt_diff, actual_doc):
+
+def main(prompt_success: bool, prompt_diff: int, actual_doc: str):
     if not prompt_success:
         st.write(f"Prompt is {prompt_diff} tokens too long, please shorten it")
         return
@@ -167,70 +205,106 @@ def main(prompt_success, prompt_diff, actual_doc):
     # Generate text
     logging.info("requesting generation from model %s", model_id)
 
-    if model_id =="OpenAI/gpt3.5":
-        result = generate_text_using_OpenAI(prompt)
-        
+    if model_id == "OpenAI/gpt3.5":
+        result = generate_text_using_OpenAI(prompt, OPENAI_API_KEY())
+
     else:
         result = generate_text(
-        model_id, prompt, decoding_method, max_new_tokens, temperature, top_k, top_p
+            model_id,
+            prompt,
+            decoding_method,
+            max_new_tokens,
+            temperature,
+            top_k,
+            top_p,
+            GENAI_KEY(),
         )
     col1, col2, col3 = st.columns([1.5, 1.5, 0.5])
-    
+
     with col1:
         st.subheader(f"Generated API Doc")
         for line in result.split("\n"):
             st.markdown(
-            f'<div style="color: black; font-size: small">{line}</div>', unsafe_allow_html=True)
+                f'<div style="color: black; font-size: small">{line}</div>',
+                unsafe_allow_html=True,
+            )
 
     with col2:
         st.subheader("Actual API Doc")
         for line in actual_doc.split("\n"):
             st.markdown(
-            f'<div style="color: black; font-size: small">{line}</div>', unsafe_allow_html=True)
+                f'<div style="color: black; font-size: small">{line}</div>',
+                unsafe_allow_html=True,
+            )
 
     with col3:
         st.subheader("Evaluation Metrics")
         # rouge score addition
-        scorer = rouge_scorer.RougeScorer(['rouge1', 'rouge2', 'rougeL'], use_stemmer=True)
+        scorer = rouge_scorer.RougeScorer(
+            ["rouge1", "rouge2", "rougeL"], use_stemmer=True
+        )
         rouge_scores = scorer.score(actual_doc, result)
-        st.markdown(f"ROUGE-1 Score:{rouge_scores['rouge1'].fmeasure:.2f}", help="ROUGE-1 refers to the overlap of unigrams (each word) between the system and reference summaries")
-        st.markdown(f"ROUGE-2 Score: {rouge_scores['rouge2'].fmeasure:.2f}", help="ROUGE-2 refers to the overlap of bigrams between the system and reference summaries")
-        st.markdown(f"ROUGE-L Score: {rouge_scores['rougeL'].fmeasure:.2f}", help="Longest common subsequence problem takes into account sentence-level structure similarity naturally and identifies longest co-occurring in sequence n-grams automatically")
+        st.markdown(
+            f"ROUGE-1 Score:{rouge_scores['rouge1'].fmeasure:.2f}",
+            help="ROUGE-1 refers to the overlap of unigrams (each word) between the system and reference summaries",
+        )
+        st.markdown(
+            f"ROUGE-2 Score: {rouge_scores['rouge2'].fmeasure:.2f}",
+            help="ROUGE-2 refers to the overlap of bigrams between the system and reference summaries",
+        )
+        st.markdown(
+            f"ROUGE-L Score: {rouge_scores['rougeL'].fmeasure:.2f}",
+            help="Longest common subsequence problem takes into account sentence-level structure similarity naturally and identifies longest co-occurring in sequence n-grams automatically",
+        )
 
         # calc cosine similarity
         vectorizer = TfidfVectorizer()
         tfidf_matrix = vectorizer.fit_transform([actual_doc, result])
         cosine_sim = cosine_similarity(tfidf_matrix[0], tfidf_matrix[1])
-        st.markdown(f"Cosine Similarity Score: {cosine_sim[0][0]:.2f}", help="0 cosine similarity means no similarity between generated and actual API documentation, 1 means they are same")
-        st.markdown("###") # add a line break
-        
-        st.markdown("**GenAI evaluation scores:**", help="Use OpenAI GPT 3 to evaluate the result of the generated API doc")
-        score = eval_using_model(result)
+        st.markdown(
+            f"Cosine Similarity Score: {cosine_sim[0][0]:.2f}",
+            help="0 cosine similarity means no similarity between generated and actual API documentation, 1 means they are same",
+        )
+        st.markdown("###")  # add a line break
+
+        st.markdown(
+            "**GenAI evaluation scores:**",
+            help="Use OpenAI GPT 3 to evaluate the result of the generated API doc",
+        )
+        score = eval_using_model(result, openai_key=OPENAI_API_KEY())
         st.write(score)
-        
+
         # Readability Scores
         st.subheader("Readability Metrics")
 
         # Flesch Reading Ease
         flesch_reading_ease = textstat.flesch_reading_ease(result)
-        st.markdown(f"Flesch Reading Ease: {flesch_reading_ease:.2f}", help="Flesch Reading Ease measures how easy a text is to read. Higher scores indicate easier readability. Ranges 0-100 and a negative score indicates a more challenging text.")
+        st.markdown(
+            f"Flesch Reading Ease: {flesch_reading_ease:.2f}",
+            help="Flesch Reading Ease measures how easy a text is to read. Higher scores indicate easier readability. Ranges 0-100 and a negative score indicates a more challenging text.",
+        )
 
         # Dale Chall Readability
         dale_chall_readability = textstat.dale_chall_readability_score(result)
-        st.markdown(f"Dale Chall Readability: {dale_chall_readability:.2f}", help="The Dale-Chall Formula is a readability formula based on the use of familiar words, rather than syllable or letter counts. Lower scores mean more difficult words. No fixed ranges.")
+        st.markdown(
+            f"Dale Chall Readability: {dale_chall_readability:.2f}",
+            help="The Dale-Chall Formula is a readability formula based on the use of familiar words, rather than syllable or letter counts. Lower scores mean more difficult words. No fixed ranges.",
+        )
 
         # Automated Readability Index (ARI)
         ari = textstat.automated_readability_index(result)
-        st.markdown(f"ARI (Automated Readability Index): {ari:.2f}", help="ARI relies on a factor of characters per word, instead of the usual syllables per word. ARI corresponds to a U.S. grade level. Higher scores indicate more advanced reading levels.")
+        st.markdown(
+            f"ARI (Automated Readability Index): {ari:.2f}",
+            help="ARI relies on a factor of characters per word, instead of the usual syllables per word. ARI corresponds to a U.S. grade level. Higher scores indicate more advanced reading levels.",
+        )
 
 
 if st.button("Generate API Documentation"):
-    
     if model_id != "OpenAI/gpt3.5":
-        prompt_success, prompt_diff = check_prompt_token_limit(model_id, prompt)
+        prompt_success, prompt_diff = check_prompt_token_limit(
+            model_id, prompt, GENAI_KEY()
+        )
 
         main(prompt_success, prompt_diff, actual_doc)
     else:
-        
         main(True, True, actual_doc)
-        

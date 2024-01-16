@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-doc-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api-doc
+  template:
+    metadata:
+      labels:
+        app: api-doc
+    spec:
+      imagePullSecrets:
+      - name: dockerhub-secret
+      containers:
+      - name: api-doc-container
+        image: docker.io/ochatterjee/api-docs-gen:v0.1.0
+        imagePullPolicy: Always
+        env:
+          - name: GENAI_KEY
+            valueFrom:
+              secretKeyRef:
+                name: api-doc-secret
+                key: GENAI_KEY
+          - name: OPENAI_API_KEY
+            valueFrom:
+              secretKeyRef:
+                name: api-doc-secret
+                key: OPENAI_API_KEY
+        ports:
+        - containerPort: 8501
+        resources:
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+          requests:
+            memory: "200Mi"
+            cpu: "250m"
