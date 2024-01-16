@@ -4,6 +4,7 @@ from utils import (
     generate_prompt,
     generate_text_using_OpenAI,
     eval_using_model,
+    indicate_key_presence,
 )
 import os
 import streamlit as st
@@ -27,8 +28,12 @@ def get_env_variable(var: str) -> str:
 
 
 # Allow the user to provide their own API keys
-user_genai_key = st.text_input("Enter GENAI_KEY:")
-user_openai_key = st.text_input("Enter OPENAI_API Key:")
+user_genai_key = st.text_input(
+    "Enter GENAI_KEY:", placeholder=indicate_key_presence("GENAI_KEY")
+)
+user_openai_key = st.text_input(
+    "Enter OPENAI_API Key:", placeholder=indicate_key_presence("OPENAI_API_KEY")
+)
 
 
 # maybe it's a bit redundant to define these two functions but whatever

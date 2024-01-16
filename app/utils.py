@@ -3,7 +3,7 @@ from genai.model import Model
 from genai.schemas import GenerateParams
 import json
 from openai import OpenAI
-
+import os
 
 
 def generate_prompt(
@@ -27,16 +27,15 @@ def generate_prompt(
     classes_doc: bool = False,
     classes_doc_text: str = "",
 ) -> str:
-
-    functions_text_joined = '\n'.join(functions_text)
-    classes_text_joined = '\n'.join(classes_text)
-    documentation_text_joined = '\n'.join(documentation_text)
-    imports_text_joined = '\n'.join(imports_text)
-    other_text_joined = '\n'.join(other_text)
-    functions_code_text_joined = '\n'.join(functions_code_text)
-    functions_doc_text_joined = '\n'.join(functions_doc_text)
-    classes_code_text_joined = '\n'.join(classes_code_text)
-    classes_doc_text_joined= '\n'.join( classes_doc_text)
+    functions_text_joined = "\n".join(functions_text)
+    classes_text_joined = "\n".join(classes_text)
+    documentation_text_joined = "\n".join(documentation_text)
+    imports_text_joined = "\n".join(imports_text)
+    other_text_joined = "\n".join(other_text)
+    functions_code_text_joined = "\n".join(functions_code_text)
+    functions_doc_text_joined = "\n".join(functions_doc_text)
+    classes_code_text_joined = "\n".join(classes_code_text)
+    classes_doc_text_joined = "\n".join(classes_doc_text)
     # print(functions_text_joined)
 
     prompt = f"""{instruction}\n"""
@@ -90,7 +89,7 @@ Class code:
 
 Class Documentation:
 
-""" 
+"""
     if classes_doc and classes_doc_text_joined:
         prompt += f"""
 
@@ -135,6 +134,7 @@ def get_data() -> dict[str, list[dict]]:
 
     return code
 
+
 def check_prompt_token_limit(
     model_id: str,
     prompt: str,
@@ -162,7 +162,7 @@ def check_prompt_token_limit(
     # Tokenize the prompt and count tokens
     tokenized_response = model.tokenize([prompt], return_tokens=True)
     prompt_tokens = int(tokenized_response[0].token_count)
-    
+
     diff = prompt_tokens - token_limit
 
     # Check if prompt is within or over the token limit
@@ -171,8 +171,16 @@ def check_prompt_token_limit(
     else:
         return False, diff
 
+
 def generate_text(
-    model_id: str, prompt: str, decoding_method: str, max_new_tokens: int, temperature: float, top_k: int, top_p: float, genai_key: str, 
+    model_id: str,
+    prompt: str,
+    decoding_method: str,
+    max_new_tokens: int,
+    temperature: float,
+    top_k: int,
+    top_p: float,
+    genai_key: str,
 ):
     creds = Credentials(genai_key)
 
@@ -196,13 +204,14 @@ def generate_text(
 
     return generated_patch
 
+
 def generate_text_using_OpenAI(prompt: str, openai_key: str):
     client = OpenAI(api_key=openai_key)
     completion = client.chat.completions.create(
-      model="gpt-3.5-turbo",
-      messages=[
-        {"role": "system", "content": f"{prompt}"},
-      ]
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": f"{prompt}"},
+        ],
     )
     response = completion.choices[0].message.content
     print(response)
@@ -210,7 +219,6 @@ def generate_text_using_OpenAI(prompt: str, openai_key: str):
 
 
 def eval_using_model(result: str, openai_key: str):
-    
     prompt = f"""Below is an API documentation for code, rate the documentation on factors such as Accuracy, Relevance,  Clarity, Completeness and Readability. Rate it on a scale of 1 to 5. 1 for the poorest documentation and 5 for the best.
     
     Example: 
@@ -229,7 +237,16 @@ def eval_using_model(result: str, openai_key: str):
     GenAI Score: """
     response = generate_text_using_OpenAI(prompt, openai_key)
     return response
-    
-    
-    
 
+
+def indicate_key_presence(env: str) -> str:
+    """
+    This function will either return an empty string,
+    or a string of '*' characters indicating the presence
+    of said key.
+    """
+    key = os.getenv(env)
+    if key:
+        return "*" * len(key)
+    else:
+        return ""
