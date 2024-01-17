@@ -6,6 +6,7 @@ from utils import (
     eval_using_model,
     indicate_key_presence,
 )
+from feedback import store_feedback
 import os
 import streamlit as st
 import logging
@@ -15,6 +16,8 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from textstat import textstat
 import os
+from streamlit_feedback import streamlit_feedback
+
 
 # Set theme, title, and icon
 st.set_page_config(page_title="API Docs Generator", page_icon="📄", layout="wide")
@@ -219,6 +222,7 @@ def main(prompt_success: bool, prompt_diff: int, actual_doc: str):
             top_p,
             GENAI_KEY(),
         )
+
     col1, col2, col3 = st.columns([1.5, 1.5, 0.5])
 
     with col1:
@@ -308,3 +312,11 @@ if st.button("Generate API Documentation"):
         main(prompt_success, prompt_diff, actual_doc)
     else:
         main(True, True, actual_doc)
+
+# generate the feedback section now
+streamlit_feedback(
+    feedback_type="thumbs",
+    on_submit=store_feedback,
+    optional_text_label="Please tell us how we could make this more useful",
+    align="flex-start",
+)

@@ -10,3 +10,4 @@ py-readability-metrics
 openai
 textstat
 scikit-learn
+streamlit-feedback
