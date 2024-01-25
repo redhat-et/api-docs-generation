@@ -5,6 +5,7 @@ from utils import (
     generate_text_using_OpenAI,
     eval_using_model,
     indicate_key_presence,
+    eval_using_langchain,
 )
 from feedback import store_feedback
 import os
@@ -136,7 +137,8 @@ with st.sidebar:
 
     instruction = st.text_area(
         "Instruction",
-        """You are an AI system specialized at generating API documentation for the provided Python code. You will be provided functions, classes, or Python scripts. Your documentation should include:
+        """
+You are an AI system specialized at generating API documentation for the provided Python code. You will be provided functions, classes, or Python scripts. Your documentation should include:
 
 1. Introduction: Briefly describe the purpose of the API and its intended use.   
 2. Functions: Document each API function, including:
@@ -222,7 +224,6 @@ def main(prompt_success: bool, prompt_diff: int, actual_doc: str):
             top_p,
             GENAI_KEY(),
         )
-
     col1, col2, col3 = st.columns([1.5, 1.5, 0.5])
 
     with col1:
@@ -243,22 +244,38 @@ def main(prompt_success: bool, prompt_diff: int, actual_doc: str):
 
     with col3:
         st.subheader("Evaluation Metrics")
-        # rouge score addition
-        scorer = rouge_scorer.RougeScorer(
-            ["rouge1", "rouge2", "rougeL"], use_stemmer=True
-        )
-        rouge_scores = scorer.score(actual_doc, result)
         st.markdown(
-            f"ROUGE-1 Score:{rouge_scores['rouge1'].fmeasure:.2f}",
-            help="ROUGE-1 refers to the overlap of unigrams (each word) between the system and reference summaries",
+            "**GenAI evaluation on Overall Quality:**",
+            help="Use OpenAI GPT 3 to evaluate the result of the generated API doc",
         )
+
+        score = eval_using_model(result, openai_key=OPENAI_API_KEY())
+        st.write(score)
+
         st.markdown(
-            f"ROUGE-2 Score: {rouge_scores['rouge2'].fmeasure:.2f}",
-            help="ROUGE-2 refers to the overlap of bigrams between the system and reference summaries",
+            "**LangChain evaluation on grammar, descriptiveness and helpfulness:**",
+            help="Use Langchain to evaluate on cutsom criteria (this list can be updated based on what we are looking to see from the generated docs"
         )
+
+        lc_score = eval_using_langchain(prompt, result)
         st.markdown(
-            f"ROUGE-L Score: {rouge_scores['rougeL'].fmeasure:.2f}",
-            help="Longest common subsequence problem takes into account sentence-level structure similarity naturally and identifies longest co-occurring in sequence n-grams automatically",
+            f"Grammatical: {lc_score[0]['score']}",
+            help="Checks if the output grammatically correct. Binary integer 0 to 1, where 1 would mean that the output is gramatically accurate and 0 means it is not",
+        )
+        
+        st.markdown(
+            f"Descriptiveness: {lc_score[1]['score']}",
+            help="Checks if the output descriptive. Binary integer 0 to 1, where 1 would mean that the output is descriptive and 0 means it is not",
+        )
+
+        st.markdown(
+            f"Helpfulness: {lc_score[2]['score']}",
+            help="Checks if the output helpful for the end user. Binary integer 0 to 1, where 1 would mean that the output is helpful and 0 means it is not"
+        )
+
+        st.markdown(
+            "**Consistency:**",
+            help="Evaluate how similar or divergent the generated document is to the actual documentation",
         )
 
         # calc cosine similarity
@@ -270,38 +287,18 @@ def main(prompt_success: bool, prompt_diff: int, actual_doc: str):
             help="0 cosine similarity means no similarity between generated and actual API documentation, 1 means they are same",
         )
         st.markdown("###")  # add a line break
-
+        
         st.markdown(
-            "**GenAI evaluation scores:**",
-            help="Use OpenAI GPT 3 to evaluate the result of the generated API doc",
+            "**Readability Scores:**",
+            help="Evaluate how readable the generated text is",
         )
-        score = eval_using_model(result, openai_key=OPENAI_API_KEY())
-        st.write(score)
-
-        # Readability Scores
-        st.subheader("Readability Metrics")
-
+        
         # Flesch Reading Ease
         flesch_reading_ease = textstat.flesch_reading_ease(result)
         st.markdown(
             f"Flesch Reading Ease: {flesch_reading_ease:.2f}",
             help="Flesch Reading Ease measures how easy a text is to read. Higher scores indicate easier readability. Ranges 0-100 and a negative score indicates a more challenging text.",
         )
-
-        # Dale Chall Readability
-        dale_chall_readability = textstat.dale_chall_readability_score(result)
-        st.markdown(
-            f"Dale Chall Readability: {dale_chall_readability:.2f}",
-            help="The Dale-Chall Formula is a readability formula based on the use of familiar words, rather than syllable or letter counts. Lower scores mean more difficult words. No fixed ranges.",
-        )
-
-        # Automated Readability Index (ARI)
-        ari = textstat.automated_readability_index(result)
-        st.markdown(
-            f"ARI (Automated Readability Index): {ari:.2f}",
-            help="ARI relies on a factor of characters per word, instead of the usual syllables per word. ARI corresponds to a U.S. grade level. Higher scores indicate more advanced reading levels.",
-        )
-
 
 if st.button("Generate API Documentation"):
     if model_id != "OpenAI/gpt3.5":

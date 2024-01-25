@@ -1,6 +1,3 @@
-import json
-import os
-from openai import OpenAI
 from genai import Credentials, Client
 from genai.text.generation import TextGenerationParameters
 from genai.text.tokenization import (
@@ -8,6 +5,15 @@ from genai.text.tokenization import (
     TextTokenizationReturnOptions,
     TextTokenizationCreateResults,
 )
+from langchain.evaluation import (
+    Criteria,
+    load_evaluator,
+    EvaluatorType
+)
+import os
+import json
+from openai import OpenAI
+from langchain_community.chat_models import ChatOpenAI
 
 
 def generate_prompt(
@@ -261,3 +267,38 @@ def indicate_key_presence(env: str) -> str:
         return "*" * len(key)
     else:
         return ""
+
+def eval_using_langchain(prediction: str, query: str):
+
+    evaluation = []
+    llm = ChatOpenAI(model="gpt-4", temperature=0)
+
+    # If you wanted to specify multiple criteria. Generally not recommended
+    custom_criterion_1 = {
+        "grammatical": "Is the output grammatically correct?",
+    }
+
+    eval_chain = load_evaluator(EvaluatorType.CRITERIA, llm=llm, criteria=custom_criterion_1)
+
+    eval_result = eval_chain.evaluate_strings(prediction=prediction, input=query)
+    evaluation.append(eval_result)
+
+    custom_criterion_2 = {
+        "descriptive": "Does the output describe a piece of code and its intended functionality?"
+    }
+
+    eval_chain = load_evaluator(EvaluatorType.CRITERIA, llm=llm, criteria=custom_criterion_2)
+
+    eval_result = eval_chain.evaluate_strings(prediction=prediction, input=query)
+    evaluation.append(eval_result)
+
+    evaluator = load_evaluator("criteria", llm=llm, criteria="helpfulness")
+
+    eval_result = evaluator.evaluate_strings(prediction=prediction,input=query)
+    evaluation.append(eval_result)
+
+    return evaluation
+
+
+
+

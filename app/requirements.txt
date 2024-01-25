@@ -11,3 +11,4 @@ openai
 textstat
 scikit-learn
 streamlit-feedback
+langchain
