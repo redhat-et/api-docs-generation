@@ -218,8 +218,8 @@ def generate_text(
     )
     response = responses[0].results[0]
     print(response)
-    generated_patch = response.generated_text
-    return generated_patch
+    generated_text = response.generated_text
+    return generated_text
 
 
 def generate_text_using_OpenAI(prompt: str, openai_key: str):
@@ -298,7 +298,3 @@ def eval_using_langchain(prediction: str, query: str):
     evaluation.append(eval_result)
 
     return evaluation
-
-
-
-

@@ -1,7 +1,7 @@
 html2text
-# new ibm version breaks existing code,
-# use this for the time being
-# TODO: update this tio version 2.0.0
-ibm-generative-ai==0.6.1
+# ibm-generative-ai==0.6.1
+ibm-generative-ai>=2.0.0
 tree-sitter
 openai
+python-dotenv
+langchain
