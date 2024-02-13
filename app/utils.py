@@ -218,8 +218,8 @@ def generate_text(
     )
     response = responses[0].results[0]
     print(response)
-    generated_text = response.generated_text
-    return generated_text
+    generated_patch = response.generated_text
+    return generated_patch
 
 
 def generate_text_using_OpenAI(prompt: str, openai_key: str):
@@ -235,18 +235,20 @@ def generate_text_using_OpenAI(prompt: str, openai_key: str):
     return response
 
 
-def eval_using_model(result: str, openai_key: str):
-    prompt = f"""Below is an API documentation for code, rate the documentation on factors such as Accuracy, Relevance,  Clarity, Completeness and Readability. Rate it on a scale of 1 to 5. 1 for the poorest documentation and 5 for the best.
-    
+def eval_using_model(result: str, openai_key: str, initial_prompt: str):
+    prompt = f"""Below is a prompt and the API documentation generated for code based on the prompt, rate the documentation on factors such as Accuracy, Relevance,  Clarity, Completeness and Readability. Rate it on a scale of 1 to 5. 1 for the poorest documentation and 5 for the best and provide reasoning for the score given.
     Example: 
+
+    Accuracy: 1 - Give specific explanation why the generated documentation is or is not accurate and point out reasons from code and generated doc
+    Relevance: 2 - Give specific explanation why the generated documentation is or is not relevant and point out reasons from code and generated doc
+    Clarity: 3 - Give specific explanation explanation why the generated documentation is or is not clear and point out reasons from code and generated doc
+    Completeness: 4 - Give specific explanation explanation why the generated documentation is or is not complete and point out reasons from code and generated doc
+    Readability: 5 - Give specific explanation explanation why the generated documentation is or is not readable and point out reasons from code and generated doc
+    Overall Score: 3
     
-    Accuracy: 1 
-    Relevance: 2 
-    Clarity: 3
-    Completeness: 4 
-    Readability: 5
-    Overall Score: 3 
+    Prompt:
     
+    {initial_prompt}
     Documentation:
     
     {result}
@@ -298,3 +300,7 @@ def eval_using_langchain(prediction: str, query: str):
     evaluation.append(eval_result)
 
     return evaluation
+
+
+
+
