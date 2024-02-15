@@ -138,18 +138,24 @@ with st.sidebar:
     instruction = st.text_area(
         "Instruction",
         """
-You are an AI system specialized at generating API documentation for the provided Python code. You will be provided functions, classes, or Python scripts. Your documentation should include:
+Generate API documentation for Python code provided in the prompt. Ensure clarity, accuracy, and user-centricity.
+If no code is provided, do not speculate or generate generic examples. Instead, leave this section blank or state "No code provided".
 
-1. Introduction: Briefly describe the purpose of the API and its intended use.   
-2. Functions: Document each API function, including:
-    - Description: Clearly explain what the endpoint or function does.
-    - Parameters: List and describe each parameter, including data types and any constraints.
-    - Return Values: Specify the data type and possible values returned.
+If Python code is provided:
 
-3. Error Handling: Describe possible error responses and their meanings.
-
-Make sure to follow this output structure to create API documentation that is clear, concise, accurate, and user-centric. Avoid speculative information and prioritize accuracy and completeness.
-
+1. Introduction: 
+2. Class Documentation:
+  - Document each class present in the code, including:
+    - Class Name and Description
+    - Class Attributes and Data types
+    - Documentation for each method within the class, following the instructions below.
+3. Function Documentation:
+  - For each function in the code:
+    - Function Description
+    - Parameters, including names and data types.
+    - Return values, including data types.
+4. Error Handling:
+Describe possible error responses and how they are handled in the code.
 """,
     )
 
@@ -244,60 +250,26 @@ def main(prompt_success: bool, prompt_diff: int, actual_doc: str):
 
     with col3:
         st.subheader("Evaluation Metrics")
-        st.markdown(
-            "**GenAI evaluation on Overall Quality:**",
-            help="Use OpenAI GPT 3 to evaluate the result of the generated API doc",
-        )
-
-        score = eval_using_model(result, openai_key=OPENAI_API_KEY())
-        st.write(score)
 
         st.markdown(
-            "**LangChain evaluation on grammar, descriptiveness and helpfulness:**",
-            help="Use Langchain to evaluate on cutsom criteria (this list can be updated based on what we are looking to see from the generated docs"
+            "**LLM based evaluation on logic, correctness and helpfulness:**",
+            help="Use Langchain Criteria based Eval to evaluate on cutsom criteria (this list can be updated based on what we are looking to see from the generated docs). Note this is language mo0del based evaluation and not always a true indication of the quality of the output that is generatged."
         )
 
         lc_score = eval_using_langchain(prompt, result)
         st.markdown(
-            f"Grammatical: {lc_score[0]['score']}",
-            help="Checks if the output grammatically correct. Binary integer 0 to 1, where 1 would mean that the output is gramatically accurate and 0 means it is not",
+            f"Logical: {lc_score[0]['score']}",
+            help="Checks if the output is logical. Binary integer 0 to 1, where 1 would mean that the output is logical and 0 means it is not",
         )
         
         st.markdown(
-            f"Descriptiveness: {lc_score[1]['score']}",
-            help="Checks if the output descriptive. Binary integer 0 to 1, where 1 would mean that the output is descriptive and 0 means it is not",
+            f"Helpfulness: {lc_score[1]['score']}",
+            help="Checks if the output helpful for the end user. Binary integer 0 to 1, where 1 would mean that the output is helpful and 0 means it is not",
         )
 
         st.markdown(
-            f"Helpfulness: {lc_score[2]['score']}",
-            help="Checks if the output helpful for the end user. Binary integer 0 to 1, where 1 would mean that the output is helpful and 0 means it is not"
-        )
-
-        st.markdown(
-            "**Consistency:**",
-            help="Evaluate how similar or divergent the generated document is to the actual documentation",
-        )
-
-        # calc cosine similarity
-        vectorizer = TfidfVectorizer()
-        tfidf_matrix = vectorizer.fit_transform([actual_doc, result])
-        cosine_sim = cosine_similarity(tfidf_matrix[0], tfidf_matrix[1])
-        st.markdown(
-            f"Cosine Similarity Score: {cosine_sim[0][0]:.2f}",
-            help="0 cosine similarity means no similarity between generated and actual API documentation, 1 means they are same",
-        )
-        st.markdown("###")  # add a line break
-        
-        st.markdown(
-            "**Readability Scores:**",
-            help="Evaluate how readable the generated text is",
-        )
-        
-        # Flesch Reading Ease
-        flesch_reading_ease = textstat.flesch_reading_ease(result)
-        st.markdown(
-            f"Flesch Reading Ease: {flesch_reading_ease:.2f}",
-            help="Flesch Reading Ease measures how easy a text is to read. Higher scores indicate easier readability. Ranges 0-100 and a negative score indicates a more challenging text.",
+            f"Correctness: {lc_score[2]['score']}",
+            help="Checks if the output correct. Binary integer 0 to 1, where 1 would mean that the output is correct and accurate and 0 means it is not"
         )
 
 if st.button("Generate API Documentation"):
