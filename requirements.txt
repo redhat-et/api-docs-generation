@@ -1,3 +1,4 @@
+ipynb
 html2text
 # ibm-generative-ai==0.6.1
 ibm-generative-ai>=2.0.0

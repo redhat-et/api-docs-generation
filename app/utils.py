@@ -48,91 +48,62 @@ def generate_prompt(
     classes_doc_text_joined = "\n".join(classes_doc_text)
     # print(functions_text_joined)
 
-    prompt = f"""{instruction}\n"""
+    prompt = f"""{instruction}"""
 
     if functions and functions_text_joined:
         prompt += f"""
-
 Function:
-
 {functions_text_joined}
-
 """
 
     if functions_code and functions_code_text_joined:
         prompt += f"""
 Function Code:
-
 {functions_code_text_joined}
-
 Function Documentation:
-
-
 """
 
     if functions_doc and functions_doc_text_joined:
         prompt += f"""
-
-
 Function Docstrings:
-
 {functions_doc_text_joined}
-
 Documentation:
-
 """
 
     if classes and classes_text_joined:
         prompt += f"""
-        
 Class:
-
 {classes_text_joined}
-
 """
     if classes_code and classes_code_text_joined:
         prompt += f"""
-        
 Class code:
-
 {classes_code_text_joined}
-
 Class Documentation:
-
 """
     if classes_doc and classes_doc_text_joined:
         prompt += f"""
-
 Classes Docstrings:
-
 {classes_doc_text_joined}
-
 Documentation
 """
 
     if documentation and documentation_text_joined:
         prompt += f"""
 Here is some code documentation for reference:
-
 {documentation_text_joined}
-
 """
 
     if imports and imports_text_joined:
         prompt += f"""
 Here are the import statements for reference:
-
 {imports_text_joined}
-
 """
 
     if other and other_text:
         prompt += f"""
 Here are other lines of code for reference:
-
 {other_text_joined}
-
-
 """
 
     return prompt
@@ -275,27 +246,21 @@ def eval_using_langchain(prediction: str, query: str):
     evaluation = []
     llm = ChatOpenAI(model="gpt-4", temperature=0)
 
-    # If you wanted to specify multiple criteria. Generally not recommended
-    custom_criterion_1 = {
-        "grammatical": "Is the output grammatically correct?",
-    }
-
-    eval_chain = load_evaluator(EvaluatorType.CRITERIA, llm=llm, criteria=custom_criterion_1)
-
+    # 1
+    custom_criteria_1 = {
+    "logical": "Is the output logical and complete? Does it capture all required fields"
+                    }
+    eval_chain = load_evaluator(EvaluatorType.CRITERIA, llm=llm, criteria=custom_criteria_1)
     eval_result = eval_chain.evaluate_strings(prediction=prediction, input=query)
     evaluation.append(eval_result)
-
-    custom_criterion_2 = {
-        "descriptive": "Does the output describe a piece of code and its intended functionality?"
-    }
-
-    eval_chain = load_evaluator(EvaluatorType.CRITERIA, llm=llm, criteria=custom_criterion_2)
-
-    eval_result = eval_chain.evaluate_strings(prediction=prediction, input=query)
+    
+    # 2
+    evaluator = load_evaluator("labeled_criteria", llm=llm, criteria="correctness")
+    eval_result = evaluator.evaluate_strings(prediction=generated_patch, input=prompt, reference=actual_doc)
     evaluation.append(eval_result)
-
+    
+    # 3
     evaluator = load_evaluator("criteria", llm=llm, criteria="helpfulness")
-
     eval_result = evaluator.evaluate_strings(prediction=prediction,input=query)
     evaluation.append(eval_result)
 
