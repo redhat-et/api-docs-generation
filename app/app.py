@@ -256,7 +256,7 @@ def main(prompt_success: bool, prompt_diff: int, actual_doc: str):
             help="Use Langchain Criteria based Eval to evaluate on cutsom criteria (this list can be updated based on what we are looking to see from the generated docs). Note this is language mo0del based evaluation and not always a true indication of the quality of the output that is generatged."
         )
 
-        lc_score = eval_using_langchain(prompt, result)
+        lc_score = eval_using_langchain(result, prompt, actual_doc)
         st.markdown(
             f"Logical: {lc_score[0]['score']}",
             help="Checks if the output is logical. Binary integer 0 to 1, where 1 would mean that the output is logical and 0 means it is not",

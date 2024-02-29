@@ -241,7 +241,7 @@ def indicate_key_presence(env: str) -> str:
     else:
         return ""
 
-def eval_using_langchain(prediction: str, query: str):
+def eval_using_langchain(prediction: str, query: str, actual_doc: str):
 
     evaluation = []
     llm = ChatOpenAI(model="gpt-4", temperature=0)
@@ -256,7 +256,7 @@ def eval_using_langchain(prediction: str, query: str):
     
     # 2
     evaluator = load_evaluator("labeled_criteria", llm=llm, criteria="correctness")
-    eval_result = evaluator.evaluate_strings(prediction=generated_patch, input=prompt, reference=actual_doc)
+    eval_result = evaluator.evaluate_strings(prediction=prediction, input=query, reference=actual_doc)
     evaluation.append(eval_result)
     
     # 3
