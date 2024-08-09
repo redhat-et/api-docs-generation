@@ -20,7 +20,7 @@ spec:
             claimName: user-feedback-db
       containers:
       - name: api-doc-container
-        image: docker.io/ochatterjee/api-docs-gen:v0.1.0
+        image: docker.io/hemaveeradhi/api-docs-gen:v0.2.0
         imagePullPolicy: Always
         env:
           - name: GENAI_KEY
